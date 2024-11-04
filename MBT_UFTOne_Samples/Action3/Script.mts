@@ -24,4 +24,3 @@ wait(3)
        Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Create").Click
 End If
 wait(3)
- systemUtil.CloseProcessByName ("firefox.exe")
