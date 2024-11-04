@@ -3,6 +3,19 @@
 '	Browser("Browser").Page("Dashboard - Advantage").WebButton("WebButton").Click
 '       Browser("Browser").Page("Dashboard - Advantage").WebMenu("My Profile Management").Select "Logout" @@ script infofile_;_ZIP::ssf13.xml_;_
 'End If @@ script infofile_;_ZIP::ssf14.xml_;_
+Dim iURL
+Dim objShell
+iURL = "https://advantageonlinebanking.com/dashboard"
+set objShell = CreateObject("Shell.Application")
+
+Set fileSystemObj = createobject("Scripting.FileSystemObject")
+edgeExist = "C:\Program Files\Mozilla Firefox\firefox.exe"
+If fileSystemObj.FileExists(edgeExist) then
+objShell.ShellExecute "C:\Program Files\Mozilla Firefox\firefox.exe", iURL, "", ""
+Else
+objShell.ShellExecute "C:\Program Files (x86)\Mozilla Firefox\firefox.exe", iURL, "", ""
+End If
+wait(3)
 If Browser("Home - Advantage Bank").Page("Dashboard - Advantage").WebButton("WebButton").Exist(3) Then
 	Browser("Browser").Page("Dashboard - Advantage").WebButton("WebButton").Click
        Browser("Browser").Page("Dashboard - Advantage").WebMenu("My Profile Management").Select "Logout"
@@ -21,3 +34,4 @@ wait(3)
  	else
  	Reporter.ReportEvent micFail, "Failed", "Fail to Login incurrect user or password"
  End If
+ systemUtil.CloseProcessByName ("firefox.exe")
