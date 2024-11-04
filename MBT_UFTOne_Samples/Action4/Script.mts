@@ -13,7 +13,7 @@ objShell.ShellExecute "C:\Program Files\Mozilla Firefox\firefox.exe", iURL, "", 
 Else
 objShell.ShellExecute "C:\Program Files (x86)\Mozilla Firefox\firefox.exe", iURL, "", ""
 End If
-wait(3)
+wait(3) @@ script infofile_;_ZIP::ssf13.xml_;_
        Browser("Home - Advantage Bank").Page("Dashboard - Advantage").WebButton("WebButton").Click @@ script infofile_;_ZIP::ssf2.xml_;_
        Browser("Home - Advantage Bank").Page("Dashboard - Advantage").WebMenu("My Profile Management").Select "Logout" @@ script infofile_;_ZIP::ssf3.xml_;_
         systemUtil.CloseProcessByName ("firefox.exe")
