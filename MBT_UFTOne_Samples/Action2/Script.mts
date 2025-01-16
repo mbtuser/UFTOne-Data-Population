@@ -1,6 +1,16 @@
-﻿'If Browser("Home - Advantage Bank_2").Page("Home - Advantage Bank").WebButton("Open").Exist Then
-'	Browser("Home - Advantage Bank_2").Page("Home - Advantage Bank").WebButton("Open").Click
-'wait(3) @@ hightlight id_;_6097862_;_script infofile_;_ZIP::ssf21.xml_;_
+﻿Dim iURL
+Dim objShell
+iURL = "https://advantageonlinebanking.com/dashboard"
+set objShell = CreateObject("Shell.Application")
+
+Set fileSystemObj = createobject("Scripting.FileSystemObject")
+edgeExist = "C:\Program Files\Mozilla Firefox\firefox.exe"
+If fileSystemObj.FileExists(edgeExist) then
+objShell.ShellExecute "C:\Program Files\Mozilla Firefox\firefox.exe", iURL, "", ""
+Else
+objShell.ShellExecute "C:\Program Files (x86)\Mozilla Firefox\firefox.exe", iURL, "", ""
+End If
+wait(3)
 If Browser("Home - Advantage Bank_3").Page("Dashboard - Advantage").WebButton("WebButton").Exist Then
      Browser("Home - Advantage Bank_3").Page("Dashboard - Advantage").WebButton("WebButton").Click @@ script infofile_;_ZIP::ssf22.xml_;_
      Browser("Home - Advantage Bank_3").Page("Dashboard - Advantage").WebMenu("My Profile Management").Select "Logout" @@ script infofile_;_ZIP::ssf23.xml_;_
@@ -17,3 +27,4 @@ If Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebButton("Reg
 	Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("confirmPass").Set Parameter("confirmPass") @@ script infofile_;_ZIP::ssf9.xml_;_
 	Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebButton("Register").Click
 End If
+ systemUtil.CloseProcessByName ("firefox.exe")
