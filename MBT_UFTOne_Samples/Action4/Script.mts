@@ -1,7 +1,4 @@
-﻿'If Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebButton("Open").Exist Then
-'       Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebButton("Open").Click @@ script infofile_;_ZIP::ssf9.xml_;_
-'End If
-Dim iURL
+﻿Dim iURL
 Dim objShell
 iURL = "https://advantageonlinebanking.com/dashboard"
 set objShell = CreateObject("Shell.Application")
