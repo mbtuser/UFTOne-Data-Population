@@ -1,4 +1,4 @@
-﻿RunAction "RegisterNewUser", oneIteration
-RunAction "LoginSiteUser", oneIteration
-RunAction "OpenNewAccount", oneIteration
-RunAction "Logout", oneIteration
+﻿RunAction "RegisterNewUserUnit", oneIteration
+RunAction "LoginSiteUserUnit", oneIteration
+RunAction "OpenNewAccountUnit", oneIteration
+RunAction "LogoutUnit", oneIteration
