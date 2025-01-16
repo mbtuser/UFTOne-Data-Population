@@ -1,4 +1,4 @@
-﻿טDim iURL
+﻿Dim iURL
 Dim objShell
 iURL = "https://advantageonlinebanking.com/dashboard"
 set objShell = CreateObject("Shell.Application")
@@ -6,11 +6,12 @@ set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = createobject("Scripting.FileSystemObject")
 edgeExist = "C:\Program Files\Mozilla Firefox\firefox.exe"
 If fileSystemObj.FileExists(edgeExist) then
-objShell.ShellExecute "C:\Program Files\Mozilla Firefox\firefox.exe", iURL, "", ""
+	objShell.ShellExecute "C:\Program Files\Mozilla Firefox\firefox.exe", iURL, "", ""
 Else
-objShell.ShellExecute "C:\Program Files (x86)\Mozilla Firefox\firefox.exe", iURL, "", ""
+	objShell.ShellExecute "C:\Program Files (x86)\Mozilla Firefox\firefox.exe", iURL, "", ""
 End If
 wait(5)
+
 If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link("Accounts").Exist(5) Then
 wait(3)
 	Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link("Accounts").Click
