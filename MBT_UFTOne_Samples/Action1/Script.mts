@@ -15,8 +15,6 @@ If Browser("Home - Advantage Bank").Page("Dashboard - Advantage").WebButton("Web
 	Browser("Browser").Page("Dashboard - Advantage").WebButton("WebButton").Click
        Browser("Browser").Page("Dashboard - Advantage").WebMenu("My Profile Management").Select "Logout"
 End If
-wait(3)	
-	Browser("Home - Advantage Bank_2").Page("Home - Advantage Bank").WebEdit("username").Set Parameter("username")
 wait(3)
 	Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("username").Set Parameter("username")
 	Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("password").SetSecure Parameter("password")
