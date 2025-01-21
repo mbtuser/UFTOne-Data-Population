@@ -15,7 +15,7 @@ If Browser("Home - Advantage Bank").Page("Dashboard - Advantage").WebButton("Web
 	Browser("Browser").Page("Dashboard - Advantage").WebButton("WebButton").Click
        Browser("Browser").Page("Dashboard - Advantage").WebMenu("My Profile Management").Select "Logout"
 End If
-wait(3) @@ script infofile_;_ZIP::ssf18.xml_;_
+wait(5)
 
 If Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("username").Exist(3) Then
 	Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("username").Set Parameter("username")
