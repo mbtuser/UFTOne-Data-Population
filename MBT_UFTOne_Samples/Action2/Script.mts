@@ -10,10 +10,10 @@ If fileSystemObj.FileExists(edgeExist) then
 Else
 	objShell.ShellExecute "C:\Program Files (x86)\Mozilla Firefox\firefox.exe", iURL, "", ""
 End If
-wait(3) @@ script infofile_;_ZIP::ssf24.xml_;_
+wait(5) @@ script infofile_;_ZIP::ssf24.xml_;_
 
-If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").WebButton("WebButton").Exist Then
-     Browser("Dashboard - Advantage").Page("Dashboard - Advantage").WebButton("WebButton").Click  @@ script infofile_;_ZIP::ssf22.xml_;_
+If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").WebButton("WebButton").Exist(5) Then
+     Browser("Dashboard - Advantage").Page("Dashboard - Advantage").WebButton("WebButton").Click @@ script infofile_;_ZIP::ssf22.xml_;_
      Browser("Home - Advantage Bank_3").Page("Dashboard - Advantage").WebMenu("My Profile Management").Select "Logout" @@ script infofile_;_ZIP::ssf23.xml_;_
 End If @@ script infofile_;_ZIP::ssf18.xml_;_
 
