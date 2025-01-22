@@ -14,6 +14,8 @@ wait(3)
 If Browser("Home - Advantage Bank").Page("Dashboard - Advantage").WebButton("WebButton").Exist(3) Then
 	Browser("Browser").Page("Dashboard - Advantage").WebButton("WebButton").Click
        Browser("Browser").Page("Dashboard - Advantage").WebMenu("My Profile Management").Select "Logout"
+ Else
+      Reporter.ReportEvent micDone, "the page not in login", "the Advantage bancking not in login"
 End If
 wait(5)
 
