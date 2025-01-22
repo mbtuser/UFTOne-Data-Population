@@ -12,8 +12,8 @@ Else
 End If
 wait(5) @@ script infofile_;_ZIP::ssf24.xml_;_
 
-If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").WebButton("WebButton").Exist(5) Then
-     Browser("Dashboard - Advantage").Page("Dashboard - Advantage").WebButton("WebButton").Click @@ script infofile_;_ZIP::ssf22.xml_;_
+If Browser("Home - Advantage Bank").Page("Dashboard - Advantage").WebButton("WebButton").Exist(5) Then
+     Browser("Home - Advantage Bank").Page("Dashboard - Advantage").WebButton("WebButton").Click @@ script infofile_;_ZIP::ssf22.xml_;_
      Browser("Home - Advantage Bank_3").Page("Dashboard - Advantage").WebMenu("My Profile Management").Select "Logout" @@ script infofile_;_ZIP::ssf23.xml_;_
  Else
      Reporter.ReportEvent micDone, "the page not in login", "the Advantage bancking not in login"
