@@ -10,7 +10,7 @@ objShell.ShellExecute "C:\Program Files\Mozilla Firefox\firefox.exe", iURL, "", 
 Else
 objShell.ShellExecute "C:\Program Files (x86)\Mozilla Firefox\firefox.exe", iURL, "", ""
 End If
-wait(3)
+wait(5)
 If Browser("Home - Advantage Bank").Page("Dashboard - Advantage").WebButton("WebButton").Exist(3) Then
 	Browser("Browser").Page("Dashboard - Advantage").WebButton("WebButton").Click
        Browser("Browser").Page("Dashboard - Advantage").WebMenu("My Profile Management").Select "Logout"
