@@ -19,6 +19,11 @@ End If
 'End If
 wait(5)
 
+
+'Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("username").Set "admin" @@ script infofile_;_ZIP::ssf19.xml_;_
+'Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("password").SetSecure "67ab3c0e340ed724dedfff000cfd" @@ script infofile_;_ZIP::ssf20.xml_;_
+
+
 If Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("username").Exist(3) Then
 	Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("username").Set Parameter("username")
 	Reporter.ReportEvent micPass, "Passed username", "set username succefull"
