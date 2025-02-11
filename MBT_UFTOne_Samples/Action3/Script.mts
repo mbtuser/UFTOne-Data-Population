@@ -11,7 +11,7 @@ Else
 	objShell.ShellExecute "C:\Program Files (x86)\Mozilla Firefox\firefox.exe", iURL, "", ""
 End If
 wait(5)
-
+ @@ script infofile_;_ZIP::ssf12.xml_;_
 If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link("Accounts").Exist(5) Then
 wait(3)
 	Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link("Accounts").Click
