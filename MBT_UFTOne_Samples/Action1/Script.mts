@@ -10,15 +10,13 @@ objShell.ShellExecute "C:\Program Files\Mozilla Firefox\firefox.exe", iURL, "", 
 Else
 objShell.ShellExecute "C:\Program Files (x86)\Mozilla Firefox\firefox.exe", iURL, "", ""
 End If
-'wait(5)
-'If Browser("Home - Advantage Bank").Page("Dashboard - Advantage").WebButton("WebButton").Exist(3) Then
-'	Browser("Browser").Page("Dashboard - Advantage").WebButton("WebButton").Click
-'       Browser("Browser").Page("Dashboard - Advantage").WebMenu("My Profile Management").Select "Logout"
-' Else
-'      Reporter.ReportEvent micDone, "the page not in login", "the Advantage bancking not in login"
-'End If
 wait(5)
-
+If Browser("Home - Advantage Bank").Page("Dashboard - Advantage").WebButton("WebButton").Exist(3) Then
+	Browser("Browser").Page("Dashboard - Advantage").WebButton("WebButton").Click
+       Browser("Browser").Page("Dashboard - Advantage").WebMenu("My Profile Management").Select "Logout"
+ Else
+      Reporter.ReportEvent micDone, "the page not in login", "the Advantage bancking not in login"
+End If
 
 'Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("username").Set "admin" @@ script infofile_;_ZIP::ssf19.xml_;_
 'Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("password").SetSecure "67ab3c0e340ed724dedfff000cfd" @@ script infofile_;_ZIP::ssf20.xml_;_
