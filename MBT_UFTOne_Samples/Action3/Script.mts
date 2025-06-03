@@ -24,8 +24,14 @@ End If
 objShell.ShellExecute browserPath, iURL, "", "", 1
 Wait(5)
 
+Dim accountsLinkText
+accountsLinkText = Parameter("ElementName")
 
-If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link("Accounts").Exist(5) Then
+If Trim(accountsLinkText) = "" Then
+    accountsLinkText = "Accounts"
+End If
+
+If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link(accountsLinkText).Exist(5) Then
     Wait(3)
     Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link("Accounts").Click
     Wait(3)

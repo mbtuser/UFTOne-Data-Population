@@ -35,11 +35,11 @@ Function GetObjectByName(elementName)
         Case "login"
             Set GetObjectByName = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebButton("Login")
         Case "dashboardBtn"
-            Set GetObjectByName = Browser("Home - Advantage Bank").Page("Dashboard - Advantage").WebButton("WebButton")
+            Set GetObjectByName = Browser("Dashboard - Advantage_2").Page("Dashboard - Advantage").WebElement("Bank Accounts")
         Case Else
             Set GetObjectByName = Nothing
     End Select
-End Function
+End Function @@ script infofile_;_ZIP::ssf23.xml_;_
 
 Set usernameObj = GetObjectByName(Parameter("usernameField"))
 If Not usernameObj Is Nothing And usernameObj.Exist(3) Then
