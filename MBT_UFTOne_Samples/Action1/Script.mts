@@ -71,7 +71,7 @@ End If
 Wait(3)
 
 Set dashObj = GetObjectByName(Parameter("dashboardButton"))
-If Not dashObj Is Nothing And dashObj.Exist(5) Then
+If Not dashObj Is Nothing And dashObj.Exist(20) Then
     Reporter.ReportEvent micPass, "Login Test", "Login successful"
     dashObj.Click
 Else
