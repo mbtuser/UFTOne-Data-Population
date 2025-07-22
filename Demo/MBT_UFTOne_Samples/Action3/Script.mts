@@ -33,7 +33,7 @@ End If
 
 If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link(accountsLinkText).Exist(5) Then
     Wait(3)
-    Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link("Accounts").Click
+    Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link(accountsLinkText).Click
     Wait(3)
 
     If Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Open new account").Exist(3) Then
@@ -44,15 +44,21 @@ If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link(accountsL
             Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Create").Click
             Reporter.ReportEvent micPass, "Account Creation", "New account created successfully"
         Else
+            MsgBox "❌ The element 'name' input field was not found on the page.", vbCritical, "Element Not Found"
             Reporter.ReportEvent micFail, "Account Creation", "Name input field not found"
+            ExitTest
         End If
     Else
+        MsgBox "❌ The button 'Open new account' was not found on the page.", vbCritical, "Element Not Found"
         Reporter.ReportEvent micFail, "Account Creation", "'Open new account' button not found"
+        ExitTest
     End If
 Else
-    Reporter.ReportEvent micFail, "Navigation", "'Accounts' link not found on dashboard"
+    MsgBox "❌ The link '" & accountsLinkText & "' was not found on the dashboard page.", vbCritical, "Element Not Found"
+    Reporter.ReportEvent micFail, "Navigation", "'" & accountsLinkText & "' link not found on dashboard"
+    ExitTest
 End If
 
 Wait(3)
-
 SystemUtil.CloseProcessByName browserName
+
