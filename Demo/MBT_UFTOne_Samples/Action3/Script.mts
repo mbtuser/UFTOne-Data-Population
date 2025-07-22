@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ﻿Dim iURL, objShell, fileSystemObj, browserPath, browserName
 
 iURL = "https://advantageonlinebanking.com/dashboard"
@@ -127,5 +126,3 @@ End If
 
 Wait(3)
 SystemUtil.CloseProcessByName browserName
-
->>>>>>> c3d31b0408e1cef0b0c02cb252ad1c2ca68da400
