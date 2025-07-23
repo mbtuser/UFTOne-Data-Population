@@ -4,11 +4,15 @@ iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
-' ������ פונקציה להצגת הודעת שגיאה זמנית
+' ������ פונקציה להצגת הודעת שגיאה זמנית באמצעות msg.vbs (לא חוסמת)
 Function ShowPopupMessage(msg)
-    Dim shell
-    Set shell = CreateObject("WScript.Shell")
-    shell.Popup msg, 5, "❌ Element Not Found", 48 ' 48 = אייקון אזהרה
+    Dim tempFilePath, f
+    tempFilePath = "C:\Windows\Temp\msg.vbs"
+    Set f = fileSystemObj.CreateTextFile(tempFilePath, True)
+    f.WriteLine "Set oShell = CreateObject(""WScript.Shell"")"
+    f.WriteLine "oShell.Popup """ & Replace(msg, """", """""") & """, 5, ""❌ Element Not Found"", 48"
+    f.Close
+    CreateObject("WScript.Shell").Run "wscript.exe """ & tempFilePath & """", 1, False
 End Function
 
 ' ������ אם תיקיית הדוח קיימת, המתן לפני התחלת הריצה

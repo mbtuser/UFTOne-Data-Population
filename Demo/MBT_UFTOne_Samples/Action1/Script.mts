@@ -30,10 +30,16 @@ End If
 objShell.ShellExecute browserPath, iURL, "", "", 1
 Wait(5)
 
+' ������ הצגת הודעה לא חוסמת ע"י יצירת msg.vbs זמני
 Function ShowPopupMessage(msg)
-    Dim shell
+    Dim tempFilePath, f, shell
+    tempFilePath = "C:\Windows\Temp\msg.vbs"
+    Set f = fileSystemObj.CreateTextFile(tempFilePath, True)
+    f.WriteLine "Set oShell = CreateObject(""WScript.Shell"")"
+    f.WriteLine "oShell.Popup """ & Replace(msg, """", """""") & """, 5, ""❌ Element Not Found"", 48"
+    f.Close
     Set shell = CreateObject("WScript.Shell")
-    shell.Popup msg, 5, "❌ Element Not Found", 48 ' 48 = exclamation icon
+    shell.Run "wscript.exe """ & tempFilePath & """", 1, False
 End Function
 
 ' ������ מיפוי אלמנטים לפי שם
