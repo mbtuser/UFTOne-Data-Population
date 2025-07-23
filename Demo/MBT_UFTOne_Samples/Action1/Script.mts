@@ -1,143 +1,40 @@
-﻿Dim iURL, objShell, fileSystemObj, browserPath, browserName
-iURL = "https://advantageonlinebanking.com/dashboard"
-Set objShell = CreateObject("Shell.Application")
-Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
+﻿' ������️ קבלת שם הלינק לפרמטר (ברירת מחדל: "Accounts")
+Dim accountsLinkText
+accountsLinkText = Trim(Parameter("ElementName"))
+If accountsLinkText = "" Then accountsLinkText = "Accounts"
 
-' ⏳ המתן אם קיימת תיקיית Report בתיקיית repo-*
-Dim basePath, folder
-basePath = "C:\test\repository\copy\src"
+' ������ שימוש בזיהוי דינמי ללינק (במקום מתוך OR)
+Dim linkDesc
+Set linkDesc = Description.Create()
+linkDesc("micclass").Value = "Link"
+linkDesc("innertext").Value = accountsLinkText
 
-If fileSystemObj.FolderExists(basePath) Then
-    For Each folder In fileSystemObj.GetFolder(basePath).SubFolders
-        If InStr(folder.Name, "repo-") > 0 Then
-            If fileSystemObj.FolderExists(folder.Path & "\repository\___mbt\_1\MBT_UFTOne_Samples_00001\Report") Then
-                Wait(5)
-                Exit For
-            End If
+If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").ChildObjects(linkDesc).Count > 0 Then
+    Wait(3)
+    Browser("Dashboard - Advantage").Page("Dashboard - Advantage").ChildObjects(linkDesc)(0).Click
+    Wait(3)
+
+    ' ������ פתיחת חשבון חדש
+    If Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Open new account").Exist(3) Then
+        Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Open new account").Click
+
+        If Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebEdit("name").Exist(3) Then
+            Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebEdit("name").Set Parameter("accountName")
+            Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Create").Click
+            Reporter.ReportEvent micPass, "Account Creation", "New account created successfully"
+        Else
+            ShowPopupMessage "❌ The element 'name' input field was not found on the page."
+            Reporter.ReportEvent micFail, "Account Creation", "Name input field not found"
+            ExitTest
         End If
-    Next
-End If
-
-' ������ פונקציה להצגת הודעת שגיאה (לא חוסמת)
-Function ShowPopupMessage(msg)
-    On Error Resume Next
-    Dim tempFilePath, f, safeMsg
-    safeMsg = Replace(msg, """", "'")
-    tempFilePath = "C:\Windows\Temp\msg.vbs"
-    Set f = fileSystemObj.CreateTextFile(tempFilePath, True)
-    If Not f Is Nothing Then
-        f.WriteLine "Set oShell = CreateObject(""WScript.Shell"")"
-        f.WriteLine "oShell.Popup """ & safeMsg & """, 5, ""❌ Element Not Found"", 48"
-        f.Close
-        CreateObject("WScript.Shell").Run "wscript.exe """ & tempFilePath & """", 1, False
-    End If
-    On Error GoTo 0
-End Function
-
-' ������ פתיחת הדפדפן הזמין
-If fileSystemObj.FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then
-    browserPath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
-    browserName = "chrome.exe"
-ElseIf fileSystemObj.FileExists("C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe") Then
-    browserPath = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
-    browserName = "msedge.exe"
-ElseIf fileSystemObj.FileExists("C:\Program Files\Mozilla Firefox\firefox.exe") Then
-    browserPath = "C:\Program Files\Mozilla Firefox\firefox.exe"
-    browserName = "firefox.exe"
-Else
-    Reporter.ReportEvent micFail, "Browser Launch", "No supported browser found"
-    ExitTest
-End If
-
-objShell.ShellExecute browserPath, iURL, "", "", 1
-Wait(5)
-
-' ������ מיפוי אובייקטים
-Function GetObjectByName(elementName)
-    Select Case elementName
-        Case "username"
-            Set GetObjectByName = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("username")
-        Case "password"
-            Set GetObjectByName = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("password")
-        Case "signIn"
-            Set GetObjectByName = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebButton("Sign-In")
-        Case "login"
-            Set GetObjectByName = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebButton("Login")
-        Case "dashboardBtn"
-            Set GetObjectByName = Browser("Dashboard - Advantage_2").Page("Dashboard - Advantage").WebElement("Bank Accounts")
-        Case Else
-            Set GetObjectByName = Nothing
-    End Select
-End Function
-
-' ������ הכנסת שם משתמש
-Dim userFieldName
-userFieldName = Trim(Parameter("usernameField"))
-If userFieldName = "" Then userFieldName = "username"
-
-Set usernameObj = GetObjectByName(userFieldName)
-If Not usernameObj Is Nothing And usernameObj.Exist(3) Then
-    usernameObj.Set Parameter("username")
-    Reporter.ReportEvent micPass, "Username", "Username set"
-Else
-    ShowPopupMessage "❌ Username field '" & userFieldName & "' not found"
-    Reporter.ReportEvent micFail, "Username", "Missing username field"
-    ExitTest
-End If
-
-' ������ הכנסת סיסמה
-Dim passFieldName
-passFieldName = Trim(Parameter("passwordField"))
-If passFieldName = "" Then passFieldName = "password"
-
-Set passwordObj = GetObjectByName(passFieldName)
-If Not passwordObj Is Nothing And passwordObj.Exist(3) Then
-    passwordObj.SetSecure Parameter("password")
-    Reporter.ReportEvent micPass, "Password", "Password set"
-Else
-    ShowPopupMessage "❌ Password field '" & passFieldName & "' not found"
-    Reporter.ReportEvent micFail, "Password", "Missing password field"
-    ExitTest
-End If
-
-' ������️ לחיצה על התחברות
-Dim signInName, loginName
-signInName = Trim(Parameter("signInButton"))
-If signInName = "" Then signInName = "signIn"
-
-Set signInObj = GetObjectByName(signInName)
-If signInObj Is Nothing Or Not signInObj.Exist(3) Then
-    loginName = Trim(Parameter("loginButton"))
-    If loginName = "" Then loginName = "login"
-    Set loginObj = GetObjectByName(loginName)
-    If loginObj Is Nothing Or Not loginObj.Exist(3) Then
-        ShowPopupMessage "❌ No login buttons found ('" & signInName & "' or '" & loginName & "')"
-        Reporter.ReportEvent micFail, "Login", "No login buttons found"
-        ExitTest
     Else
-        loginObj.Click
+        ShowPopupMessage "❌ The button 'Open new account' was not found on the page."
+        Reporter.ReportEvent micFail, "Account Creation", "'Open new account' button not found"
+        ExitTest
     End If
 Else
-    signInObj.Click
-End If
-
-Wait(3)
-
-' ✅ בדיקה אם הדשבורד עלה
-Dim dashboardBtnName
-dashboardBtnName = Trim(Parameter("dashboardButton"))
-If dashboardBtnName = "" Then dashboardBtnName = "dashboardBtn"
-
-Set dashObj = GetObjectByName(dashboardBtnName)
-If Not dashObj Is Nothing And dashObj.Exist(20) Then
-    Reporter.ReportEvent micPass, "Login Success", "Dashboard loaded"
-    dashObj.Click
-Else
-    ShowPopupMessage "❌ Dashboard button '" & dashboardBtnName & "' not found"
-    Reporter.ReportEvent micFail, "Login Failed", "Dashboard not found"
+    ShowPopupMessage "❌ The link '" & accountsLinkText & "' was not found on the dashboard page."
+    Reporter.ReportEvent micFail, "Navigation", "Link '" & accountsLinkText & "' not found on dashboard"
     ExitTest
 End If
-
-Wait(3)
-SystemUtil.CloseProcessByName browserName
 

@@ -7,9 +7,8 @@ Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 Function ShowPopupMessage(msg)
     On Error Resume Next
     Dim tempFilePath, f, safeMsg
-    safeMsg = Replace(msg, """", "'") ' מניעת גרשיים כפולים שגורמים לקריסה
+    safeMsg = Replace(msg, """", "'")
     tempFilePath = "C:\Windows\Temp\msg.vbs"
-
     Set f = fileSystemObj.CreateTextFile(tempFilePath, True)
     If Not f Is Nothing Then
         f.WriteLine "Set oShell = CreateObject(""WScript.Shell"")"
@@ -22,7 +21,7 @@ Function ShowPopupMessage(msg)
     On Error GoTo 0
 End Function
 
-' ������ המתנה אם קיימת תיקיית דוח נעולה כלשהי
+' ������ המתנה אם קיימת תיקיית Report נעולה כלשהי
 Dim basePath, folder
 basePath = "C:\test\repository\copy\src"
 If fileSystemObj.FolderExists(basePath) Then
@@ -57,15 +56,21 @@ End If
 objShell.ShellExecute browserPath, iURL, "", "", 1
 Wait(5)
 
-' ������️ בדיקת שם הלינק מתוך פרמטר
-Dim accountsLinkText
-accountsLinkText = Parameter("ElementName")
-If Trim(accountsLinkText) = "" Then accountsLinkText = "Accounts"
+' ������️ בדיקת שם הלינק מתוך פרמטר (באמצעות תיאור דינמי)
+Dim accountsLinkText, linkDesc
+accountsLinkText = Trim(Parameter("ElementName"))
+If accountsLinkText = "" Then accountsLinkText = "Accounts"
 
-' ������ ניווט לחשבונות
-If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link(accountsLinkText).Exist(5) Then
+Set linkDesc = Description.Create()
+linkDesc("micclass").Value = "Link"
+linkDesc("innertext").Value = accountsLinkText
+
+Dim accountsPage
+Set accountsPage = Browser("Dashboard - Advantage").Page("Dashboard - Advantage")
+
+If accountsPage.ChildObjects(linkDesc).Count > 0 Then
     Wait(3)
-    Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link(accountsLinkText).Click
+    accountsPage.ChildObjects(linkDesc)(0).Click
     Wait(3)
 
     ' ������ פתיחת חשבון חדש
