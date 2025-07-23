@@ -30,6 +30,12 @@ End If
 objShell.ShellExecute browserPath, iURL, "", "", 1
 Wait(5)
 
+Function ShowPopupMessage(msg)
+    Dim shell
+    Set shell = CreateObject("WScript.Shell")
+    shell.Popup msg, 5, "❌ Element Not Found", 48 ' 48 = exclamation icon
+End Function
+
 ' ������ מיפוי אלמנטים לפי שם
 Function GetObjectByName(elementName)
     Select Case elementName
@@ -54,7 +60,7 @@ If Not usernameObj Is Nothing And usernameObj.Exist(3) Then
     usernameObj.Set Parameter("username")
     Reporter.ReportEvent micPass, "Username Set", "Username set successfully"
 Else
-    MsgBox "❌ The element 'usernameField' was not found on the page.", vbCritical, "Element Not Found"
+    ShowPopupMessage "The element 'usernameField' was not found on the page."
     Reporter.ReportEvent micFail, "Username Not Found", "Failed to find username field"
     ExitTest
 End If
@@ -65,7 +71,7 @@ If Not passwordObj Is Nothing And passwordObj.Exist(3) Then
     passwordObj.SetSecure Parameter("password")
     Reporter.ReportEvent micPass, "Password Set", "Password set successfully"
 Else
-    MsgBox "❌ The element 'passwordField' was not found on the page.", vbCritical, "Element Not Found"
+    ShowPopupMessage "The element 'passwordField' was not found on the page."
     Reporter.ReportEvent micFail, "Password Not Found", "Failed to find password field"
     ExitTest
 End If
@@ -75,7 +81,7 @@ Set signInObj = GetObjectByName(Parameter("signInButton"))
 If signInObj Is Nothing Or Not signInObj.Exist(3) Then
     Set loginObj = GetObjectByName(Parameter("loginButton"))
     If loginObj Is Nothing Or Not loginObj.Exist(3) Then
-        MsgBox "❌ Neither 'signInButton' nor 'loginButton' was found on the page.", vbCritical, "Element Not Found"
+        ShowPopupMessage "Neither 'signInButton' nor 'loginButton' was found on the page."
         Reporter.ReportEvent micFail, "Login Button", "No login button found"
         ExitTest
     Else
@@ -93,12 +99,11 @@ If Not dashObj Is Nothing And dashObj.Exist(20) Then
     Reporter.ReportEvent micPass, "Login Test", "Login successful"
     dashObj.Click
 Else
-    MsgBox "❌ The element 'dashboardButton' was not found on the page.", vbCritical, "Element Not Found"
+    ShowPopupMessage "The element 'dashboardButton' was not found on the page."
     Reporter.ReportEvent micFail, "Login Test", "Login failed"
     ExitTest
 End If
 
-' ✅ המתן כדי לשחרר משאבים ולמנוע נעילה
 Wait(3)
 SystemUtil.CloseProcessByName browserName
 

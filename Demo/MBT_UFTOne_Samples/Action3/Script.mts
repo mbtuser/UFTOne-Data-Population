@@ -4,6 +4,13 @@ iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
+' ������ פונקציה להצגת הודעת שגיאה זמנית
+Function ShowPopupMessage(msg)
+    Dim shell
+    Set shell = CreateObject("WScript.Shell")
+    shell.Popup msg, 5, "❌ Element Not Found", 48 ' 48 = אייקון אזהרה
+End Function
+
 ' ������ אם תיקיית הדוח קיימת, המתן לפני התחלת הריצה
 If fileSystemObj.FolderExists("C:\test\repository\copy\src\repo-1006\repository\___mbt\_1\MBT_UFTOne_Samples_00001\Report") Then
     Wait(5)
@@ -52,17 +59,17 @@ If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link(accountsL
             Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Create").Click
             Reporter.ReportEvent micPass, "Account Creation", "New account created successfully"
         Else
-            MsgBox "❌ The element 'name' input field was not found on the page.", vbCritical, "Element Not Found"
+            ShowPopupMessage "❌ The element 'name' input field was not found on the page."
             Reporter.ReportEvent micFail, "Account Creation", "Name input field not found"
             ExitTest
         End If
     Else
-        MsgBox "❌ The button 'Open new account' was not found on the page.", vbCritical, "Element Not Found"
+        ShowPopupMessage "❌ The button 'Open new account' was not found on the page."
         Reporter.ReportEvent micFail, "Account Creation", "'Open new account' button not found"
         ExitTest
     End If
 Else
-    MsgBox "❌ The link '" & accountsLinkText & "' was not found on the dashboard page.", vbCritical, "Element Not Found"
+    ShowPopupMessage "❌ The link '" & accountsLinkText & "' was not found on the dashboard page."
     Reporter.ReportEvent micFail, "Navigation", "'" & accountsLinkText & "' link not found on dashboard"
     ExitTest
 End If
