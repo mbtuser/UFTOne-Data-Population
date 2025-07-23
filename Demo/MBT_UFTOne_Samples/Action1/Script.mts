@@ -3,7 +3,28 @@ iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
-' ⏳ המתן אם קיימת תיקיית Report
+' ������ הודעת שגיאה HTA חוסמת (blocking) שתוצג למשך 5 שניות ותוקלט
+Sub ShowPopupMessage(msg)
+    On Error Resume Next
+    Dim tempFilePath, f, safeMsg
+    safeMsg = Replace(msg, """", "'")
+    tempFilePath = "C:\Windows\Temp\popup_msg.hta"
+
+    Set f = fileSystemObj.CreateTextFile(tempFilePath, True)
+    f.WriteLine "<html><head><title>❌ Error</title><hta:application showInTaskbar='yes' windowState='normal'/></head>"
+    f.WriteLine "<body bgcolor='#fff0f0'><h2 style='color:red; font-family:sans-serif; text-align:center; margin-top:40px'>" & safeMsg & "</h2>"
+    f.WriteLine "<script>setTimeout(function(){window.close();}, 5000);</script>"
+    f.WriteLine "</body></html>"
+    f.Close
+
+    Dim wsh
+    Set wsh = CreateObject("WScript.Shell")
+    wsh.Run "mshta.exe """ & tempFilePath & """", 1, True
+    Set wsh = Nothing
+    On Error GoTo 0
+End Sub
+
+' ⏳ המתנה אם תיקיית Report קיימת
 Dim basePath, folder
 basePath = "C:\test\repository\copy\src"
 If fileSystemObj.FolderExists(basePath) Then
@@ -17,26 +38,7 @@ If fileSystemObj.FolderExists(basePath) Then
     Next
 End If
 
-' ������ הודעת שגיאה HTA שנשארת לפחות 5 שניות
-Sub ShowPopupMessage(msg)
-    On Error Resume Next
-    Dim tempFilePath, f, safeMsg
-    safeMsg = Replace(msg, """", "'")
-    tempFilePath = "C:\Windows\Temp\popup_msg.hta"
-
-    Set f = fileSystemObj.CreateTextFile(tempFilePath, True)
-    f.WriteLine "<html><head><title>❌ Error</title></head>"
-    f.WriteLine "<body bgcolor='#fff8dc'><h2 style='color:red;font-family:sans-serif'>" & safeMsg & "</h2>"
-    f.WriteLine "<script>setTimeout(function(){window.close();}, 5000);</script>"
-    f.WriteLine "</body></html>"
-    f.Close
-
-    CreateObject("WScript.Shell").Run "mshta.exe """ & tempFilePath & """", 1, False
-    Wait(5)
-    On Error GoTo 0
-End Sub
-
-' ������ פתיחת דפדפן זמין
+' ������ פתיחת הדפדפן
 If fileSystemObj.FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then
     browserPath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
     browserName = "chrome.exe"
@@ -55,7 +57,7 @@ End If
 objShell.ShellExecute browserPath, iURL, "", "", 1
 Wait(5)
 
-' ������ מיפוי אובייקטים
+' ������ מיפוי אובייקטים לפי שם לוגי
 Function GetObjectByNameSafe(logicalName)
     On Error Resume Next
     Set GetObjectByNameSafe = Nothing
@@ -127,7 +129,7 @@ End If
 
 Wait(3)
 
-' ✅ בדיקה לדשבורד
+' ✅ בדיקה לטעינת הדשבורד
 Dim dashboardBtnName
 dashboardBtnName = Trim(Parameter("dashboardButton"))
 If dashboardBtnName = "" Then dashboardBtnName = "dashboardBtn"

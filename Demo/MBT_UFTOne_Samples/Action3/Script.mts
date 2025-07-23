@@ -3,25 +3,27 @@ iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
-' ������ הצגת הודעה ויזואלית – תישאר פתוחה 5 שניות
-Sub ShowPopupMessage(msg)
-    Dim fso, htaFile, safeMsg, tempFile
-    Set fso = CreateObject("Scripting.FileSystemObject")
-    safeMsg = Replace(msg, """", "'")
-    tempFile = "C:\Windows\Temp\msg_popup.hta"
+' ������ פונקציית הודעת שגיאה נראית ומוקלטת בוודאות
+Sub ShowBlockingPopup(msg)
+    Dim cmd, tempVbsFile
+    tempVbsFile = "C:\Windows\Temp\blocking_popup.vbs"
+    
+    msg = Replace(msg, """", "'")
+    
+    ' צור קובץ .vbs שמציג הודעה חוסמת (blocking) שנשארת על המסך
+    With fileSystemObj.CreateTextFile(tempVbsFile, True)
+        .WriteLine "MsgBox """ & msg & """, 48, ""❌ UFT Automation Error"""
+        .Close
+    End With
 
-    Set htaFile = fso.CreateTextFile(tempFile, True)
-    htaFile.WriteLine "<html><head><title>❌ Error</title></head><body bgcolor='#fff8dc'>"
-    htaFile.WriteLine "<h2 style='color:red;font-family:sans-serif'>" & safeMsg & "</h2>"
-    htaFile.WriteLine "<script>setTimeout(function(){window.close();}, 5000);</script>"
-    htaFile.WriteLine "</body></html>"
-    htaFile.Close
-
-    CreateObject("WScript.Shell").Run "mshta.exe """ & tempFile & """", 1, False
-    Wait(5) ' מאפשר להודעה להישאר על המסך
+    ' הפעל את ההודעה בצורה חוסמת כדי לוודא שהיא תישאר פתוחה לרגע ותוקלט
+    Dim wsh
+    Set wsh = CreateObject("WScript.Shell")
+    wsh.Run "wscript.exe """ & tempVbsFile & """", 1, True
+    Set wsh = Nothing
 End Sub
 
-' ������ בדיקת תיקיית Report פעילה
+' ⏳ המתנה אם קיימת תיקיית ריצה פעילה
 Dim basePath, folder
 basePath = "C:\test\repository\copy\src"
 If fileSystemObj.FolderExists(basePath) Then
@@ -35,7 +37,7 @@ If fileSystemObj.FolderExists(basePath) Then
     Next
 End If
 
-' ������ פתיחת דפדפן
+' ������ פתיחת דפדפן זמין
 If fileSystemObj.FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then
     browserPath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
     browserName = "chrome.exe"
@@ -45,19 +47,16 @@ ElseIf fileSystemObj.FileExists("C:\Program Files (x86)\Microsoft\Edge\Applicati
 ElseIf fileSystemObj.FileExists("C:\Program Files\Mozilla Firefox\firefox.exe") Then
     browserPath = "C:\Program Files\Mozilla Firefox\firefox.exe"
     browserName = "firefox.exe"
-ElseIf fileSystemObj.FileExists("C:\Program Files (x86)\Mozilla Firefox\firefox.exe") Then
-    browserPath = "C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
-    browserName = "firefox.exe"
 Else
-    ShowPopupMessage "❌ No supported browser found on this machine"
-    Reporter.ReportEvent micFail, "Browser Launch", "No browser found"
+    ShowBlockingPopup "❌ No supported browser found on this machine."
+    Reporter.ReportEvent micFail, "Browser Launch", "No supported browser found"
     ExitTest
 End If
 
 objShell.ShellExecute browserPath, iURL, "", "", 1
-Wait(5)
+Wait(6)
 
-' ������️ בדיקת לינק לפי טקסט
+' ������ ניתוח טקסט הלינק
 Dim accountsLinkText, linkDesc, linkCount
 accountsLinkText = Trim(Parameter("ElementName"))
 If accountsLinkText = "" Then accountsLinkText = "Accounts"
@@ -87,18 +86,18 @@ If linkCount > 0 Then
             Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Create").Click
             Reporter.ReportEvent micPass, "Account Creation", "New account created successfully"
         Else
-            ShowPopupMessage "❌ Input field for 'name' was not found"
-            Reporter.ReportEvent micFail, "Account Creation", "Missing 'name' input field"
+            ShowBlockingPopup "❌ Input field for 'name' was not found."
+            Reporter.ReportEvent micFail, "Account Creation", "'name' input field not found"
             ExitTest
         End If
     Else
-        ShowPopupMessage "❌ 'Open new account' button not found on the page"
+        ShowBlockingPopup "❌ 'Open new account' button not found."
         Reporter.ReportEvent micFail, "Account Creation", "'Open new account' button missing"
         ExitTest
     End If
 Else
-    ShowPopupMessage "❌ Link '" & accountsLinkText & "' not found on dashboard"
-    Reporter.ReportEvent micFail, "Navigation", "'" & accountsLinkText & "' link not found"
+    ShowBlockingPopup "❌ Link '" & accountsLinkText & "' not found on dashboard."
+    Reporter.ReportEvent micFail, "Navigation", "Link '" & accountsLinkText & "' not found"
     ExitTest
 End If
 
