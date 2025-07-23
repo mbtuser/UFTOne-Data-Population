@@ -17,18 +17,25 @@ If fileSystemObj.FolderExists(basePath) Then
     Next
 End If
 
-' ������ פונקציה להצגת הודעה (non-blocking)
+' ������ פונקציה להצגת הודעת שגיאה (non-blocking)
 Function ShowPopupMessage(msg)
     On Error Resume Next
-    Dim tempFilePath, f, safeMsg
+    Dim tempFilePath, f, safeMsg, popupRet
     safeMsg = Replace(msg, """", "'")
     tempFilePath = "C:\Windows\Temp\msg.vbs"
+
     Set f = fileSystemObj.CreateTextFile(tempFilePath, True)
     If Not f Is Nothing Then
         f.WriteLine "Set oShell = CreateObject(""WScript.Shell"")"
-        f.WriteLine "oShell.Popup """ & safeMsg & """, 5, ""❌ Element Not Found"", 48"
+        f.WriteLine "oShell.Popup """ & safeMsg & """, 5, ""❌ Error"", 48"
         f.Close
-        CreateObject("WScript.Shell").Run "wscript.exe """ & tempFilePath & """", 1, False
+
+        popupRet = CreateObject("WScript.Shell").Run("wscript.exe """ & tempFilePath & """", 1, False)
+        If popupRet <> 0 Then
+            Reporter.ReportEvent micWarning, "Popup Execution", "⚠ Popup script returned code " & popupRet
+        End If
+    Else
+        Reporter.ReportEvent micWarning, "Popup Failure", "⚠ Could not create popup script file"
     End If
     On Error GoTo 0
 End Function

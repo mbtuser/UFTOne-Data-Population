@@ -3,25 +3,26 @@ iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
-' ������ פונקציה להצגת הודעת שגיאה זמנית (לא חוסמת)
+' ������ פונקציה להצגת הודעה על המסך (לא חוסמת, נראית בהקלטה)
 Function ShowPopupMessage(msg)
     On Error Resume Next
     Dim tempFilePath, f, safeMsg
     safeMsg = Replace(msg, """", "'")
-    tempFilePath = "C:\Windows\Temp\msg.vbs"
+    tempFilePath = "C:\Windows\Temp\msg_popup.vbs"
+    
     Set f = fileSystemObj.CreateTextFile(tempFilePath, True)
     If Not f Is Nothing Then
-        f.WriteLine "Set oShell = CreateObject(""WScript.Shell"")"
-        f.WriteLine "oShell.Popup """ & safeMsg & """, 5, ""❌ Element Not Found"", 48"
+        f.WriteLine "Set WshShell = CreateObject(""WScript.Shell"")"
+        f.WriteLine "WshShell.Popup """ & safeMsg & """, 7, ""❌ Error"", 48"
         f.Close
         CreateObject("WScript.Shell").Run "wscript.exe """ & tempFilePath & """", 1, False
     Else
-        Reporter.ReportEvent micWarning, "Popup Failure", "⚠ Could not create popup script file"
+        Reporter.ReportEvent micWarning, "Popup Failure", "⚠ Could not create popup file"
     End If
     On Error GoTo 0
 End Function
 
-' ������ המתנה אם קיימת תיקיית Report נעולה כלשהי
+' ������ בדיקה אם תיקיית Report קיימת (מסמלת ריצה קודמת פעילה)
 Dim basePath, folder
 basePath = "C:\test\repository\copy\src"
 If fileSystemObj.FolderExists(basePath) Then
@@ -35,7 +36,7 @@ If fileSystemObj.FolderExists(basePath) Then
     Next
 End If
 
-' ������ פתיחת דפדפן לפי מה שמותקן
+' ������ פתיחת דפדפן זמין
 If fileSystemObj.FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then
     browserPath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
     browserName = "chrome.exe"
@@ -49,14 +50,15 @@ ElseIf fileSystemObj.FileExists("C:\Program Files (x86)\Mozilla Firefox\firefox.
     browserPath = "C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
     browserName = "firefox.exe"
 Else
-    Reporter.ReportEvent micFail, "Browser Launch", "No supported browser found on this machine"
+    ShowPopupMessage "❌ No supported browser found on this machine"
+    Reporter.ReportEvent micFail, "Browser Launch", "No browser found"
     ExitTest
 End If
 
 objShell.ShellExecute browserPath, iURL, "", "", 1
 Wait(5)
 
-' ������️ בדיקת שם הלינק מתוך פרמטר (באמצעות תיאור דינמי)
+' ������️ בדיקה אם קיים הלינק לפי הטקסט שהוזן בפרמטר
 Dim accountsLinkText, linkDesc, linkCount
 accountsLinkText = Trim(Parameter("ElementName"))
 If accountsLinkText = "" Then accountsLinkText = "Accounts"
@@ -74,12 +76,11 @@ linkCount = matchingLinks.Count
 On Error GoTo 0
 
 If linkCount > 0 Then
-    Wait(3)
     matchingLinks(0).Click
     Wait(3)
 
     ' ������ פתיחת חשבון חדש
-    If Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Open new account").Exist(3) Then
+    If Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Open new account").Exist(5) Then
         Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Open new account").Click
 
         If Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebEdit("name").Exist(3) Then
@@ -87,22 +88,21 @@ If linkCount > 0 Then
             Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Create").Click
             Reporter.ReportEvent micPass, "Account Creation", "New account created successfully"
         Else
-            ShowPopupMessage "❌ The element 'name' input field was not found on the page."
-            Reporter.ReportEvent micFail, "Account Creation", "Name input field not found"
+            ShowPopupMessage "❌ Input field for 'name' was not found"
+            Reporter.ReportEvent micFail, "Account Creation", "Missing 'name' input field"
             ExitTest
         End If
     Else
-        ShowPopupMessage "❌ The button 'Open new account' was not found on the page."
-        Reporter.ReportEvent micFail, "Account Creation", "'Open new account' button not found"
+        ShowPopupMessage "❌ 'Open new account' button not found on the page"
+        Reporter.ReportEvent micFail, "Account Creation", "'Open new account' button missing"
         ExitTest
     End If
 Else
-    ShowPopupMessage "❌ The link '" & accountsLinkText & "' was not found on the dashboard page."
-    Reporter.ReportEvent micFail, "Navigation", "'" & accountsLinkText & "' link not found on dashboard"
+    ShowPopupMessage "❌ Link '" & accountsLinkText & "' not found on dashboard"
+    Reporter.ReportEvent micFail, "Navigation", "'" & accountsLinkText & "' link not found"
     ExitTest
 End If
 
-' ⏳ השהייה לפני סגירת הדפדפן – שיאפשר הקלטת הודעה
-Wait(3)
+Wait(4)
 SystemUtil.CloseProcessByName browserName
 
