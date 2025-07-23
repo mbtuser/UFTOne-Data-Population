@@ -3,12 +3,12 @@ iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
-' ✅ הודעת שגיאה – MsgBox חוסם מתוך VBS
+' ✅ הודעת שגיאה חוסמת ע"י יצירת קובץ VBS עם MsgBox
 Sub ShowPopupMessage(msg)
     On Error Resume Next
     Dim tempVbsPath, f
     tempVbsPath = "C:\Windows\Temp\uft_error_popup.vbs"
-    msg = Replace(msg, """", "'") ' בטיחות למחרוזת
+    msg = Replace(msg, """", "'") ' בטיחות
 
     Set f = fileSystemObj.CreateTextFile(tempVbsPath, True)
     f.WriteLine "MsgBox """ & msg & """, 48, ""❌ UFT Error"""
@@ -16,7 +16,7 @@ Sub ShowPopupMessage(msg)
 
     Dim shell
     Set shell = CreateObject("WScript.Shell")
-    shell.Run "wscript.exe """ & tempVbsPath & """", 1, True ' True = חוסם
+    shell.Run "wscript.exe """ & tempVbsPath & """", 1, True ' True = חסימה עד סגירה
     Set shell = Nothing
     On Error GoTo 0
 End Sub

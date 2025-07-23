@@ -3,36 +3,9 @@ iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
-' ✅ הודעת שגיאה HTA תמיד בראש המסך (Always on Top) ונשמרת 5 שניות
+' ✅ הודעת שגיאה פשוטה - MsgBox מתוך הסקריפט הראשי, תמיד תופיע ותוקלט
 Sub ShowBlockingPopup(msg)
-    On Error Resume Next
-    Dim tempFilePath, f, safeMsg
-    safeMsg = Replace(msg, """", "'")
-    tempFilePath = "C:\Windows\Temp\popup_msg.hta"
-
-    Set f = fileSystemObj.CreateTextFile(tempFilePath, True)
-    f.WriteLine "<html><head><title>Error</title>"
-    f.WriteLine "<hta:application showInTaskbar='yes' windowState='normal' sysMenu='no' caption='yes' border='thin' maximizeButton='no' minimizeButton='no' />"
-    f.WriteLine "<script>"
-    f.WriteLine "function setOnTop() {"
-    f.WriteLine "  try {"
-    f.WriteLine "    var shell = new ActiveXObject('WScript.Shell');"
-    f.WriteLine "    shell.AppActivate(document.title);"
-    f.WriteLine "  } catch(e) {}"
-    f.WriteLine "  setTimeout('window.close()', 5000);"
-    f.WriteLine "}"
-    f.WriteLine "</script></head>"
-    f.WriteLine "<body onload='setOnTop()' bgcolor='#fff0f0'>"
-    f.WriteLine "<h2 style='color:red; font-family:sans-serif; text-align:center; margin-top:40px'>" & safeMsg & "</h2>"
-    f.WriteLine "</body></html>"
-    f.Close
-
-    Dim wsh
-    Set wsh = CreateObject("WScript.Shell")
-    wsh.Run "mshta.exe """ & tempFilePath & """", 1, False
-    Wait(6)
-    Set wsh = Nothing
-    On Error GoTo 0
+    MsgBox msg, vbCritical + vbOKOnly, "❌ UFT Error"
 End Sub
 
 ' ⏳ המתן אם קיימת תיקיית Report
