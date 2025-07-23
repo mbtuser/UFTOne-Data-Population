@@ -15,10 +15,18 @@ Function ShowPopupMessage(msg)
     CreateObject("WScript.Shell").Run "wscript.exe """ & tempFilePath & """", 1, False
 End Function
 
-' ������ אם תיקיית הדוח קיימת, המתן לפני התחלת הריצה
-If fileSystemObj.FolderExists("C:\test\repository\copy\src\repo-1006\repository\___mbt\_1\MBT_UFTOne_Samples_00001\Report") Then
-    Wait(5)
-End If
+' ������ אם קיימת תיקיית דוח פעילה – המתן לשחרור
+Dim basePath, folder
+basePath = "C:\test\repository\copy\src"
+
+For Each folder In fileSystemObj.GetFolder(basePath).SubFolders
+    If InStr(folder.Name, "repo-") > 0 Then
+        If fileSystemObj.FolderExists(folder.Path & "\repository\___mbt\_1\MBT_UFTOne_Samples_00001\Report") Then
+            Wait(5)
+            Exit For
+        End If
+    End If
+Next
 
 ' ������ פתיחת דפדפן לפי מה שמותקן
 If fileSystemObj.FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then

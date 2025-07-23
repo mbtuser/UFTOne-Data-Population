@@ -4,10 +4,18 @@ iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
-' ⏳ בדוק אם תיקיית הדוח קיימת – המתן לשחרור נעילה
-If fileSystemObj.FolderExists("C:\test\repository\copy\src\repo-1006\repository\___mbt\_1\MBT_UFTOne_Samples_00001\Report") Then
-    Wait(5)
-End If
+' ⏳ המתן אם קיימת תיקיית Report פעילה באחד מתיקיות repo-*
+Dim basePath, folder
+basePath = "C:\test\repository\copy\src"
+
+For Each folder In fileSystemObj.GetFolder(basePath).SubFolders
+    If InStr(folder.Name, "repo-") > 0 Then
+        If fileSystemObj.FolderExists(folder.Path & "\repository\___mbt\_1\MBT_UFTOne_Samples_00001\Report") Then
+            Wait(5)
+            Exit For
+        End If
+    End If
+Next
 
 ' ������ פתיחת הדפדפן לפי מה שמותקן
 If fileSystemObj.FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then
