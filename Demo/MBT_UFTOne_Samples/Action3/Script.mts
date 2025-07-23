@@ -3,27 +3,25 @@ iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
-' ������ פונקציית הודעת שגיאה נראית ומוקלטת בוודאות
+' ✅ הודעת שגיאה נראית ומוקלטת בוודאות (MsgBox דרך קובץ VBS)
 Sub ShowBlockingPopup(msg)
     Dim cmd, tempVbsFile
     tempVbsFile = "C:\Windows\Temp\blocking_popup.vbs"
     
     msg = Replace(msg, """", "'")
     
-    ' צור קובץ .vbs שמציג הודעה חוסמת (blocking) שנשארת על המסך
     With fileSystemObj.CreateTextFile(tempVbsFile, True)
         .WriteLine "MsgBox """ & msg & """, 48, ""❌ UFT Automation Error"""
         .Close
     End With
 
-    ' הפעל את ההודעה בצורה חוסמת כדי לוודא שהיא תישאר פתוחה לרגע ותוקלט
     Dim wsh
     Set wsh = CreateObject("WScript.Shell")
-    wsh.Run "wscript.exe """ & tempVbsFile & """", 1, True
+    wsh.Run "wscript.exe """ & tempVbsFile & """", 1, True ' חוסם
     Set wsh = Nothing
 End Sub
 
-' ⏳ המתנה אם קיימת תיקיית ריצה פעילה
+' ⏳ המתן אם תיקיית ריצה קיימת
 Dim basePath, folder
 basePath = "C:\test\repository\copy\src"
 If fileSystemObj.FolderExists(basePath) Then
@@ -37,7 +35,7 @@ If fileSystemObj.FolderExists(basePath) Then
     Next
 End If
 
-' ������ פתיחת דפדפן זמין
+' ������ פתיחת הדפדפן
 If fileSystemObj.FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then
     browserPath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
     browserName = "chrome.exe"
@@ -56,8 +54,8 @@ End If
 objShell.ShellExecute browserPath, iURL, "", "", 1
 Wait(6)
 
-' ������ ניתוח טקסט הלינק
-Dim accountsLinkText, linkDesc, linkCount
+' ������ ניתוח לינק ה-Accounts
+Dim accountsLinkText, linkDesc, linkCount, matchingLinks
 accountsLinkText = Trim(Parameter("ElementName"))
 If accountsLinkText = "" Then accountsLinkText = "Accounts"
 
@@ -65,13 +63,8 @@ Set linkDesc = Description.Create()
 linkDesc("micclass").Value = "Link"
 linkDesc("innertext").Value = accountsLinkText
 
-Dim accountsPage, matchingLinks
-Set accountsPage = Browser("Dashboard - Advantage").Page("Dashboard - Advantage")
-
-On Error Resume Next
-Set matchingLinks = accountsPage.ChildObjects(linkDesc)
+Set matchingLinks = Browser("Dashboard - Advantage").Page("Dashboard - Advantage").ChildObjects(linkDesc)
 linkCount = matchingLinks.Count
-On Error GoTo 0
 
 If linkCount > 0 Then
     matchingLinks(0).Click
