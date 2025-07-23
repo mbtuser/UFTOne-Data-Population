@@ -57,7 +57,7 @@ objShell.ShellExecute browserPath, iURL, "", "", 1
 Wait(5)
 
 ' ������️ בדיקת שם הלינק מתוך פרמטר (באמצעות תיאור דינמי)
-Dim accountsLinkText, linkDesc
+Dim accountsLinkText, linkDesc, linkCount
 accountsLinkText = Trim(Parameter("ElementName"))
 If accountsLinkText = "" Then accountsLinkText = "Accounts"
 
@@ -65,12 +65,17 @@ Set linkDesc = Description.Create()
 linkDesc("micclass").Value = "Link"
 linkDesc("innertext").Value = accountsLinkText
 
-Dim accountsPage
+Dim accountsPage, matchingLinks
 Set accountsPage = Browser("Dashboard - Advantage").Page("Dashboard - Advantage")
 
-If accountsPage.ChildObjects(linkDesc).Count > 0 Then
+On Error Resume Next
+Set matchingLinks = accountsPage.ChildObjects(linkDesc)
+linkCount = matchingLinks.Count
+On Error GoTo 0
+
+If linkCount > 0 Then
     Wait(3)
-    accountsPage.ChildObjects(linkDesc)(0).Click
+    matchingLinks(0).Click
     Wait(3)
 
     ' ������ פתיחת חשבון חדש

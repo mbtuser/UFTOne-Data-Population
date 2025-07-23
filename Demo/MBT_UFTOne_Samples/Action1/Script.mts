@@ -51,7 +51,7 @@ End If
 objShell.ShellExecute browserPath, iURL, "", "", 1
 Wait(5)
 
-' ������ מיפוי אובייקטים בבטחה - לא יקרוס גם אם שם שגוי
+' ������ מיפוי אובייקטים בבטחה
 Function GetObjectByNameSafe(logicalName)
     On Error Resume Next
     Set GetObjectByNameSafe = Nothing
@@ -66,8 +66,6 @@ Function GetObjectByNameSafe(logicalName)
             Set GetObjectByNameSafe = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebButton("Login")
         Case "dashboardBtn"
             Set GetObjectByNameSafe = Browser("Dashboard - Advantage_2").Page("Dashboard - Advantage").WebElement("Bank Accounts")
-        Case Else
-            Set GetObjectByNameSafe = Nothing
     End Select
     On Error GoTo 0
 End Function
