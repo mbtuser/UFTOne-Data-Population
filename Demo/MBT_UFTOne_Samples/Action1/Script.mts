@@ -3,7 +3,7 @@ iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
-' ⏳ המתן אם קיימת תיקיית Report בתיקיית repo-*
+' ⏳ המתן אם קיימת תיקיית Report
 Dim basePath, folder
 basePath = "C:\test\repository\copy\src"
 If fileSystemObj.FolderExists(basePath) Then
@@ -17,30 +17,26 @@ If fileSystemObj.FolderExists(basePath) Then
     Next
 End If
 
-' ������ פונקציה להצגת הודעת שגיאה (non-blocking)
-Function ShowPopupMessage(msg)
+' ������ הודעת שגיאה HTA שנשארת לפחות 5 שניות
+Sub ShowPopupMessage(msg)
     On Error Resume Next
-    Dim tempFilePath, f, safeMsg, popupRet
+    Dim tempFilePath, f, safeMsg
     safeMsg = Replace(msg, """", "'")
-    tempFilePath = "C:\Windows\Temp\msg.vbs"
+    tempFilePath = "C:\Windows\Temp\popup_msg.hta"
 
     Set f = fileSystemObj.CreateTextFile(tempFilePath, True)
-    If Not f Is Nothing Then
-        f.WriteLine "Set oShell = CreateObject(""WScript.Shell"")"
-        f.WriteLine "oShell.Popup """ & safeMsg & """, 5, ""❌ Error"", 48"
-        f.Close
+    f.WriteLine "<html><head><title>❌ Error</title></head>"
+    f.WriteLine "<body bgcolor='#fff8dc'><h2 style='color:red;font-family:sans-serif'>" & safeMsg & "</h2>"
+    f.WriteLine "<script>setTimeout(function(){window.close();}, 5000);</script>"
+    f.WriteLine "</body></html>"
+    f.Close
 
-        popupRet = CreateObject("WScript.Shell").Run("wscript.exe """ & tempFilePath & """", 1, False)
-        If popupRet <> 0 Then
-            Reporter.ReportEvent micWarning, "Popup Execution", "⚠ Popup script returned code " & popupRet
-        End If
-    Else
-        Reporter.ReportEvent micWarning, "Popup Failure", "⚠ Could not create popup script file"
-    End If
+    CreateObject("WScript.Shell").Run "mshta.exe """ & tempFilePath & """", 1, False
+    Wait(5)
     On Error GoTo 0
-End Function
+End Sub
 
-' ������ פתיחת הדפדפן הזמין
+' ������ פתיחת דפדפן זמין
 If fileSystemObj.FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then
     browserPath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
     browserName = "chrome.exe"
@@ -51,6 +47,7 @@ ElseIf fileSystemObj.FileExists("C:\Program Files\Mozilla Firefox\firefox.exe") 
     browserPath = "C:\Program Files\Mozilla Firefox\firefox.exe"
     browserName = "firefox.exe"
 Else
+    ShowPopupMessage "❌ No supported browser found"
     Reporter.ReportEvent micFail, "Browser Launch", "No supported browser found"
     ExitTest
 End If
@@ -58,7 +55,7 @@ End If
 objShell.ShellExecute browserPath, iURL, "", "", 1
 Wait(5)
 
-' ������ מיפוי אובייקטים בבטחה
+' ������ מיפוי אובייקטים
 Function GetObjectByNameSafe(logicalName)
     On Error Resume Next
     Set GetObjectByNameSafe = Nothing
@@ -88,7 +85,7 @@ If Not usernameObj Is Nothing And usernameObj.Exist(3) Then
     Reporter.ReportEvent micPass, "Username", "Username set"
 Else
     ShowPopupMessage "❌ Username field '" & userFieldName & "' not found"
-    Reporter.ReportEvent micFail, "Username", "Missing username field"
+    Reporter.ReportEvent micFail, "Username", "Username field missing"
     ExitTest
 End If
 
@@ -103,11 +100,11 @@ If Not passwordObj Is Nothing And passwordObj.Exist(3) Then
     Reporter.ReportEvent micPass, "Password", "Password set"
 Else
     ShowPopupMessage "❌ Password field '" & passFieldName & "' not found"
-    Reporter.ReportEvent micFail, "Password", "Missing password field"
+    Reporter.ReportEvent micFail, "Password", "Password field missing"
     ExitTest
 End If
 
-' ������ לחיצה על התחברות
+' ������ התחברות
 Dim signInName, loginName
 signInName = Trim(Parameter("signInButton"))
 If signInName = "" Then signInName = "signIn"
@@ -130,7 +127,7 @@ End If
 
 Wait(3)
 
-' ✅ בדיקה אם עולה הדשבורד
+' ✅ בדיקה לדשבורד
 Dim dashboardBtnName
 dashboardBtnName = Trim(Parameter("dashboardButton"))
 If dashboardBtnName = "" Then dashboardBtnName = "dashboardBtn"
@@ -141,7 +138,7 @@ If Not dashObj Is Nothing And dashObj.Exist(20) Then
     dashObj.Click
 Else
     ShowPopupMessage "❌ Dashboard button '" & dashboardBtnName & "' not found"
-    Reporter.ReportEvent micFail, "Login Failed", "Dashboard not found"
+    Reporter.ReportEvent micFail, "Login Failed", "Dashboard button missing"
     ExitTest
 End If
 

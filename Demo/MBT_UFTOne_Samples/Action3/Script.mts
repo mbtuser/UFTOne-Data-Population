@@ -3,26 +3,25 @@ iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
-' ������ פונקציה להצגת הודעה על המסך (לא חוסמת, נראית בהקלטה)
-Function ShowPopupMessage(msg)
-    On Error Resume Next
-    Dim tempFilePath, f, safeMsg
+' ������ הצגת הודעה ויזואלית – תישאר פתוחה 5 שניות
+Sub ShowPopupMessage(msg)
+    Dim fso, htaFile, safeMsg, tempFile
+    Set fso = CreateObject("Scripting.FileSystemObject")
     safeMsg = Replace(msg, """", "'")
-    tempFilePath = "C:\Windows\Temp\msg_popup.vbs"
-    
-    Set f = fileSystemObj.CreateTextFile(tempFilePath, True)
-    If Not f Is Nothing Then
-        f.WriteLine "Set WshShell = CreateObject(""WScript.Shell"")"
-        f.WriteLine "WshShell.Popup """ & safeMsg & """, 7, ""❌ Error"", 48"
-        f.Close
-        CreateObject("WScript.Shell").Run "wscript.exe """ & tempFilePath & """", 1, False
-    Else
-        Reporter.ReportEvent micWarning, "Popup Failure", "⚠ Could not create popup file"
-    End If
-    On Error GoTo 0
-End Function
+    tempFile = "C:\Windows\Temp\msg_popup.hta"
 
-' ������ בדיקה אם תיקיית Report קיימת (מסמלת ריצה קודמת פעילה)
+    Set htaFile = fso.CreateTextFile(tempFile, True)
+    htaFile.WriteLine "<html><head><title>❌ Error</title></head><body bgcolor='#fff8dc'>"
+    htaFile.WriteLine "<h2 style='color:red;font-family:sans-serif'>" & safeMsg & "</h2>"
+    htaFile.WriteLine "<script>setTimeout(function(){window.close();}, 5000);</script>"
+    htaFile.WriteLine "</body></html>"
+    htaFile.Close
+
+    CreateObject("WScript.Shell").Run "mshta.exe """ & tempFile & """", 1, False
+    Wait(5) ' מאפשר להודעה להישאר על המסך
+End Sub
+
+' ������ בדיקת תיקיית Report פעילה
 Dim basePath, folder
 basePath = "C:\test\repository\copy\src"
 If fileSystemObj.FolderExists(basePath) Then
@@ -36,7 +35,7 @@ If fileSystemObj.FolderExists(basePath) Then
     Next
 End If
 
-' ������ פתיחת דפדפן זמין
+' ������ פתיחת דפדפן
 If fileSystemObj.FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then
     browserPath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
     browserName = "chrome.exe"
@@ -58,7 +57,7 @@ End If
 objShell.ShellExecute browserPath, iURL, "", "", 1
 Wait(5)
 
-' ������️ בדיקה אם קיים הלינק לפי הטקסט שהוזן בפרמטר
+' ������️ בדיקת לינק לפי טקסט
 Dim accountsLinkText, linkDesc, linkCount
 accountsLinkText = Trim(Parameter("ElementName"))
 If accountsLinkText = "" Then accountsLinkText = "Accounts"
