@@ -1,88 +1,67 @@
-﻿' אותו ShowPopupMessage כמו למעלה
+﻿' ✅ הודעת שגיאה שתוקלט
 Sub ShowPopupMessage(msg)
     On Error Resume Next
-    Dim tempVbsPath, f
-    tempVbsPath = "C:\Windows\Temp\uft_error_popup.vbs"
     msg = Replace(msg, """", "'")
-    Set f = CreateObject("Scripting.FileSystemObject").CreateTextFile(tempVbsPath, True)
-    f.WriteLine "MsgBox """ & msg & """, 48, ""❌ UFT Error"""
-    f.Close
-    CreateObject("WScript.Shell").Run "wscript.exe """ & tempVbsPath & """", 1, True
+    MsgBox msg, 48, "❌ UFT Error"
     On Error GoTo 0
 End Sub
 
-Dim iURL, objShell, browserPath, browserName
-iURL = "https://advantageonlinebanking.com/dashboard"
-Set objShell = CreateObject("Shell.Application")
-
-If CreateObject("Scripting.FileSystemObject").FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then
-    browserPath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
-    browserName = "chrome.exe"
-ElseIf CreateObject("Scripting.FileSystemObject").FileExists("C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe") Then
-    browserPath = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
-    browserName = "msedge.exe"
-ElseIf CreateObject("Scripting.FileSystemObject").FileExists("C:\Program Files\Mozilla Firefox\firefox.exe") Then
-    browserPath = "C:\Program Files\Mozilla Firefox\firefox.exe"
-    browserName = "firefox.exe"
-Else
-    ShowPopupMessage "❌ No supported browser found"
-    Reporter.ReportEvent micFail, "Browser Launch", "No supported browser found"
-    ExitTest
-End If
-
-objShell.ShellExecute browserPath, iURL, "", "", 1
-Wait(6)
-
 Function GetObjectByNameSafe(logicalName)
     On Error Resume Next
+    Set GetObjectByNameSafe = Nothing
     Select Case logicalName
         Case "username"
-            Set GetObjectByNameSafe = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("username")
+            Set GetObjectByNameSafe = Browser("CreationTime:=0").Page("title:=.*").WebEdit("name:=username")
         Case "password"
-            Set GetObjectByNameSafe = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("password")
+            Set GetObjectByNameSafe = Browser("CreationTime:=0").Page("title:=.*").WebEdit("name:=password")
         Case "signIn"
-            Set GetObjectByNameSafe = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebButton("Sign-In")
+            Set GetObjectByNameSafe = Browser("CreationTime:=0").Page("title:=.*").WebButton("name:=Sign-In")
         Case "login"
-            Set GetObjectByNameSafe = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebButton("Login")
+            Set GetObjectByNameSafe = Browser("CreationTime:=0").Page("title:=.*").WebButton("name:=Login")
         Case "dashboardBtn"
-            Set GetObjectByNameSafe = Browser("Dashboard - Advantage_2").Page("Dashboard - Advantage").WebElement("Bank Accounts")
+            Set GetObjectByNameSafe = Browser("CreationTime:=0").Page("title:=.*").WebElement("innertext:=Bank Accounts")
     End Select
     On Error GoTo 0
 End Function
 
-Dim usernameObj, passwordObj
+Dim usernameObj, passwordObj, signInObj, loginObj, dashObj
+
 Set usernameObj = GetObjectByNameSafe("username")
-If usernameObj Is Nothing Or Not usernameObj.Exist(3) Then
+If Not usernameObj Is Nothing And usernameObj.Exist(3) Then
+    usernameObj.Set "samples_demo_tests1"
+Else
     ShowPopupMessage "❌ Username field not found"
     ExitTest
 End If
-usernameObj.Set Parameter("username")
 
 Set passwordObj = GetObjectByNameSafe("password")
-If passwordObj Is Nothing Or Not passwordObj.Exist(3) Then
+If Not passwordObj Is Nothing And passwordObj.Exist(3) Then
+    passwordObj.SetSecure "Aa1234567890"
+Else
     ShowPopupMessage "❌ Password field not found"
     ExitTest
 End If
-passwordObj.SetSecure Parameter("password")
 
-Dim loginObj
-Set loginObj = GetObjectByNameSafe("login")
-If loginObj Is Nothing Or Not loginObj.Exist(3) Then
-    ShowPopupMessage "❌ Login button not found"
-    ExitTest
-End If
-loginObj.Click
-Wait(4)
-
-Dim dashObj
-Set dashObj = GetObjectByNameSafe("dashboardBtn")
-If dashObj Is Nothing Or Not dashObj.Exist(10) Then
-    ShowPopupMessage "❌ Dashboard element not found"
-    ExitTest
+Set signInObj = GetObjectByNameSafe("signIn")
+If signInObj Is Nothing Or Not signInObj.Exist(3) Then
+    Set loginObj = GetObjectByNameSafe("login")
+    If loginObj Is Nothing Or Not loginObj.Exist(3) Then
+        ShowPopupMessage "❌ No login buttons found"
+        ExitTest
+    Else
+        loginObj.Click
+    End If
 Else
-    dashObj.Click
+    signInObj.Click
 End If
 
-Wait(4)
-SystemUtil.CloseProcessByName browserName
+Wait(3)
+
+Set dashObj = GetObjectByNameSafe("dashboardBtn")
+If Not dashObj Is Nothing And dashObj.Exist(10) Then
+    dashObj.Click
+Else
+    ShowPopupMessage "❌ Dashboard button not found"
+    ExitTest
+End If
 

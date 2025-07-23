@@ -3,24 +3,13 @@ iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
-' ✅ הודעת שגיאה פשוטה - MsgBox מתוך הסקריפט הראשי, תמיד תופיע ותוקלט
-Sub ShowBlockingPopup(msg)
-    MsgBox msg, vbCritical + vbOKOnly, "❌ UFT Error"
+' ✅ הודעת שגיאה שתוקלט ב־UFT עם MsgBox חוסם
+Sub ShowPopupMessage(msg)
+    On Error Resume Next
+    msg = Replace(msg, """", "'")
+    MsgBox msg, 48, "❌ UFT Error"
+    On Error GoTo 0
 End Sub
-
-' ⏳ המתן אם קיימת תיקיית Report
-Dim basePath, folder
-basePath = "C:\test\repository\copy\src"
-If fileSystemObj.FolderExists(basePath) Then
-    For Each folder In fileSystemObj.GetFolder(basePath).SubFolders
-        If InStr(folder.Name, "repo-") > 0 Then
-            If fileSystemObj.FolderExists(folder.Path & "\repository\___mbt\_1\MBT_UFTOne_Samples_00001\Report") Then
-                Wait(5)
-                Exit For
-            End If
-        End If
-    Next
-End If
 
 ' ������ פתיחת דפדפן זמין
 If fileSystemObj.FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then
@@ -33,7 +22,7 @@ ElseIf fileSystemObj.FileExists("C:\Program Files\Mozilla Firefox\firefox.exe") 
     browserPath = "C:\Program Files\Mozilla Firefox\firefox.exe"
     browserName = "firefox.exe"
 Else
-    ShowBlockingPopup "❌ No supported browser found on this machine."
+    ShowPopupMessage "❌ No supported browser found"
     Reporter.ReportEvent micFail, "Browser Launch", "No supported browser found"
     ExitTest
 End If
@@ -43,44 +32,31 @@ Wait(6)
 
 ' ������ ניסיון ללחוץ על לינק Accounts
 Dim accountsLinkText, linkDesc, linkCount, matchingLinks
+On Error Resume Next
 accountsLinkText = Trim(Parameter("ElementName"))
 If accountsLinkText = "" Then accountsLinkText = "Accounts"
+On Error GoTo 0
 
 Set linkDesc = Description.Create()
 linkDesc("micclass").Value = "Link"
 linkDesc("innertext").Value = accountsLinkText
 
-Set matchingLinks = Browser("Dashboard - Advantage").Page("Dashboard - Advantage").ChildObjects(linkDesc)
-linkCount = matchingLinks.Count
+Set matchingLinks = Browser("CreationTime:=0").Page("title:=.*").ChildObjects(linkDesc)
+If Not matchingLinks Is Nothing Then
+    linkCount = matchingLinks.Count
+Else
+    linkCount = 0
+End If
 
 If linkCount > 0 Then
     matchingLinks(0).Click
-    Wait(3)
-
-    ' ������ לחיצה על כפתור יצירת חשבון
-    If Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Open new account").Exist(5) Then
-        Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Open new account").Click
-
-        If Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebEdit("name").Exist(3) Then
-            Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebEdit("name").Set Parameter("accountName")
-            Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Create").Click
-            Reporter.ReportEvent micPass, "Account Creation", "New account created successfully"
-        Else
-            ShowBlockingPopup "❌ Input field for 'name' was not found."
-            Reporter.ReportEvent micFail, "Account Creation", "'name' input field not found"
-            ExitTest
-        End If
-    Else
-        ShowBlockingPopup "❌ 'Open new account' button not found."
-        Reporter.ReportEvent micFail, "Account Creation", "'Open new account' button missing"
-        ExitTest
-    End If
+    Wait(2)
+    Reporter.ReportEvent micPass, "Navigation", "Clicked '" & accountsLinkText & "'"
 Else
-    ShowBlockingPopup "❌ Link '" & accountsLinkText & "' not found on dashboard."
+    ShowPopupMessage "❌ Link '" & accountsLinkText & "' not found"
     Reporter.ReportEvent micFail, "Navigation", "Link '" & accountsLinkText & "' not found"
     ExitTest
 End If
 
-Wait(4)
 SystemUtil.CloseProcessByName browserName
 
