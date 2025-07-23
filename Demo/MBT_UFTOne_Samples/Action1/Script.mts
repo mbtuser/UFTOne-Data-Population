@@ -1,48 +1,27 @@
-﻿Dim iURL, objShell, fileSystemObj, browserPath, browserName
-iURL = "https://advantageonlinebanking.com/dashboard"
-Set objShell = CreateObject("Shell.Application")
-Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
-
-' ✅ הודעת שגיאה חוסמת ע"י יצירת קובץ VBS עם MsgBox
+﻿' אותו ShowPopupMessage כמו למעלה
 Sub ShowPopupMessage(msg)
     On Error Resume Next
     Dim tempVbsPath, f
     tempVbsPath = "C:\Windows\Temp\uft_error_popup.vbs"
-    msg = Replace(msg, """", "'") ' בטיחות
-
-    Set f = fileSystemObj.CreateTextFile(tempVbsPath, True)
+    msg = Replace(msg, """", "'")
+    Set f = CreateObject("Scripting.FileSystemObject").CreateTextFile(tempVbsPath, True)
     f.WriteLine "MsgBox """ & msg & """, 48, ""❌ UFT Error"""
     f.Close
-
-    Dim shell
-    Set shell = CreateObject("WScript.Shell")
-    shell.Run "wscript.exe """ & tempVbsPath & """", 1, True ' True = חסימה עד סגירה
-    Set shell = Nothing
+    CreateObject("WScript.Shell").Run "wscript.exe """ & tempVbsPath & """", 1, True
     On Error GoTo 0
 End Sub
 
-' ⏳ המתנה אם תיקיית Report קיימת
-Dim basePath, folder
-basePath = "C:\test\repository\copy\src"
-If fileSystemObj.FolderExists(basePath) Then
-    For Each folder In fileSystemObj.GetFolder(basePath).SubFolders
-        If InStr(folder.Name, "repo-") > 0 Then
-            If fileSystemObj.FolderExists(folder.Path & "\repository\___mbt\_1\MBT_UFTOne_Samples_00001\Report") Then
-                Wait(5)
-                Exit For
-            End If
-        End If
-    Next
-End If
+Dim iURL, objShell, browserPath, browserName
+iURL = "https://advantageonlinebanking.com/dashboard"
+Set objShell = CreateObject("Shell.Application")
 
-' ������ פתיחת דפדפן זמין
-If fileSystemObj.FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then
+If CreateObject("Scripting.FileSystemObject").FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then
     browserPath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
     browserName = "chrome.exe"
-ElseIf fileSystemObj.FileExists("C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe") Then
+ElseIf CreateObject("Scripting.FileSystemObject").FileExists("C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe") Then
     browserPath = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
     browserName = "msedge.exe"
-ElseIf fileSystemObj.FileExists("C:\Program Files\Mozilla Firefox\firefox.exe") Then
+ElseIf CreateObject("Scripting.FileSystemObject").FileExists("C:\Program Files\Mozilla Firefox\firefox.exe") Then
     browserPath = "C:\Program Files\Mozilla Firefox\firefox.exe"
     browserName = "firefox.exe"
 Else
@@ -52,12 +31,10 @@ Else
 End If
 
 objShell.ShellExecute browserPath, iURL, "", "", 1
-Wait(5)
+Wait(6)
 
-' ������ מיפוי אובייקטים לפי שם לוגי
 Function GetObjectByNameSafe(logicalName)
     On Error Resume Next
-    Set GetObjectByNameSafe = Nothing
     Select Case logicalName
         Case "username"
             Set GetObjectByNameSafe = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("username")
@@ -73,74 +50,39 @@ Function GetObjectByNameSafe(logicalName)
     On Error GoTo 0
 End Function
 
-' ������ הכנסת שם משתמש
-Dim userFieldName
-userFieldName = Trim(Parameter("usernameField"))
-If userFieldName = "" Then userFieldName = "username"
-
-Set usernameObj = GetObjectByNameSafe(userFieldName)
-If Not usernameObj Is Nothing And usernameObj.Exist(3) Then
-    usernameObj.Set Parameter("username")
-    Reporter.ReportEvent micPass, "Username", "Username set"
-Else
-    ShowPopupMessage "❌ Username field '" & userFieldName & "' not found"
-    Reporter.ReportEvent micFail, "Username", "Username field missing"
+Dim usernameObj, passwordObj
+Set usernameObj = GetObjectByNameSafe("username")
+If usernameObj Is Nothing Or Not usernameObj.Exist(3) Then
+    ShowPopupMessage "❌ Username field not found"
     ExitTest
 End If
+usernameObj.Set Parameter("username")
 
-' ������ הכנסת סיסמה
-Dim passFieldName
-passFieldName = Trim(Parameter("passwordField"))
-If passFieldName = "" Then passFieldName = "password"
-
-Set passwordObj = GetObjectByNameSafe(passFieldName)
-If Not passwordObj Is Nothing And passwordObj.Exist(3) Then
-    passwordObj.SetSecure Parameter("password")
-    Reporter.ReportEvent micPass, "Password", "Password set"
-Else
-    ShowPopupMessage "❌ Password field '" & passFieldName & "' not found"
-    Reporter.ReportEvent micFail, "Password", "Password field missing"
+Set passwordObj = GetObjectByNameSafe("password")
+If passwordObj Is Nothing Or Not passwordObj.Exist(3) Then
+    ShowPopupMessage "❌ Password field not found"
     ExitTest
 End If
+passwordObj.SetSecure Parameter("password")
 
-' ������ התחברות
-Dim signInName, loginName
-signInName = Trim(Parameter("signInButton"))
-If signInName = "" Then signInName = "signIn"
-
-Set signInObj = GetObjectByNameSafe(signInName)
-If signInObj Is Nothing Or Not signInObj.Exist(3) Then
-    loginName = Trim(Parameter("loginButton"))
-    If loginName = "" Then loginName = "login"
-    Set loginObj = GetObjectByNameSafe(loginName)
-    If loginObj Is Nothing Or Not loginObj.Exist(3) Then
-        ShowPopupMessage "❌ No login buttons found ('" & signInName & "' or '" & loginName & "')"
-        Reporter.ReportEvent micFail, "Login", "No login buttons found"
-        ExitTest
-    Else
-        loginObj.Click
-    End If
-Else
-    signInObj.Click
+Dim loginObj
+Set loginObj = GetObjectByNameSafe("login")
+If loginObj Is Nothing Or Not loginObj.Exist(3) Then
+    ShowPopupMessage "❌ Login button not found"
+    ExitTest
 End If
+loginObj.Click
+Wait(4)
 
-Wait(3)
-
-' ✅ בדיקת דשבורד
-Dim dashboardBtnName
-dashboardBtnName = Trim(Parameter("dashboardButton"))
-If dashboardBtnName = "" Then dashboardBtnName = "dashboardBtn"
-
-Set dashObj = GetObjectByNameSafe(dashboardBtnName)
-If Not dashObj Is Nothing And dashObj.Exist(20) Then
-    Reporter.ReportEvent micPass, "Login Success", "Dashboard loaded"
+Dim dashObj
+Set dashObj = GetObjectByNameSafe("dashboardBtn")
+If dashObj Is Nothing Or Not dashObj.Exist(10) Then
+    ShowPopupMessage "❌ Dashboard element not found"
+    ExitTest
+Else
     dashObj.Click
-Else
-    ShowPopupMessage "❌ Dashboard button '" & dashboardBtnName & "' not found"
-    Reporter.ReportEvent micFail, "Login Failed", "Dashboard button missing"
-    ExitTest
 End If
 
-Wait(3)
+Wait(4)
 SystemUtil.CloseProcessByName browserName
 
