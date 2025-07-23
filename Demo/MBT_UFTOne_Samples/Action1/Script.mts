@@ -3,29 +3,21 @@ iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
-' ✅ הודעת שגיאה – קופצת Always on Top ונשמרת 5 שניות
+' ✅ הודעת שגיאה – MsgBox חוסם מתוך VBS
 Sub ShowPopupMessage(msg)
     On Error Resume Next
-    Dim tempFilePath, f, safeMsg
-    safeMsg = Replace(msg, """", "'")
-    tempFilePath = "C:\Windows\Temp\uft_popup.hta"
+    Dim tempVbsPath, f
+    tempVbsPath = "C:\Windows\Temp\uft_error_popup.vbs"
+    msg = Replace(msg, """", "'") ' בטיחות למחרוזת
 
-    Set f = fileSystemObj.CreateTextFile(tempFilePath, True)
-    f.WriteLine "<html><head><title>Error</title>"
-    f.WriteLine "<hta:application showInTaskbar='yes' windowState='normal' sysMenu='no' caption='yes' border='thin' maximizeButton='no' minimizeButton='no' />"
-    f.WriteLine "<script>"
-    f.WriteLine "function setOnTop() {"
-    f.WriteLine "  try { var shell = new ActiveXObject('WScript.Shell'); shell.AppActivate(document.title); } catch(e) {}"
-    f.WriteLine "  setTimeout('window.close()', 5000);"
-    f.WriteLine "}"
-    f.WriteLine "</script></head>"
-    f.WriteLine "<body onload='setOnTop()' bgcolor='#fff0f0'>"
-    f.WriteLine "<h2 style='color:red; font-family:sans-serif; text-align:center; margin-top:40px'>" & safeMsg & "</h2>"
-    f.WriteLine "</body></html>"
+    Set f = fileSystemObj.CreateTextFile(tempVbsPath, True)
+    f.WriteLine "MsgBox """ & msg & """, 48, ""❌ UFT Error"""
     f.Close
 
-    CreateObject("WScript.Shell").Run "mshta.exe """ & tempFilePath & """", 1, False
-    Wait(6)
+    Dim shell
+    Set shell = CreateObject("WScript.Shell")
+    shell.Run "wscript.exe """ & tempVbsPath & """", 1, True ' True = חוסם
+    Set shell = Nothing
     On Error GoTo 0
 End Sub
 
