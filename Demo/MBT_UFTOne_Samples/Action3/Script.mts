@@ -3,25 +3,39 @@ iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
-' ✅ הודעת שגיאה נראית ומוקלטת בוודאות (MsgBox דרך קובץ VBS)
+' ✅ הודעת שגיאה HTA תמיד בראש המסך (Always on Top) ונשמרת 5 שניות
 Sub ShowBlockingPopup(msg)
-    Dim cmd, tempVbsFile
-    tempVbsFile = "C:\Windows\Temp\blocking_popup.vbs"
-    
-    msg = Replace(msg, """", "'")
-    
-    With fileSystemObj.CreateTextFile(tempVbsFile, True)
-        .WriteLine "MsgBox """ & msg & """, 48, ""❌ UFT Automation Error"""
-        .Close
-    End With
+    On Error Resume Next
+    Dim tempFilePath, f, safeMsg
+    safeMsg = Replace(msg, """", "'")
+    tempFilePath = "C:\Windows\Temp\popup_msg.hta"
+
+    Set f = fileSystemObj.CreateTextFile(tempFilePath, True)
+    f.WriteLine "<html><head><title>Error</title>"
+    f.WriteLine "<hta:application showInTaskbar='yes' windowState='normal' sysMenu='no' caption='yes' border='thin' maximizeButton='no' minimizeButton='no' />"
+    f.WriteLine "<script>"
+    f.WriteLine "function setOnTop() {"
+    f.WriteLine "  try {"
+    f.WriteLine "    var shell = new ActiveXObject('WScript.Shell');"
+    f.WriteLine "    shell.AppActivate(document.title);"
+    f.WriteLine "  } catch(e) {}"
+    f.WriteLine "  setTimeout('window.close()', 5000);"
+    f.WriteLine "}"
+    f.WriteLine "</script></head>"
+    f.WriteLine "<body onload='setOnTop()' bgcolor='#fff0f0'>"
+    f.WriteLine "<h2 style='color:red; font-family:sans-serif; text-align:center; margin-top:40px'>" & safeMsg & "</h2>"
+    f.WriteLine "</body></html>"
+    f.Close
 
     Dim wsh
     Set wsh = CreateObject("WScript.Shell")
-    wsh.Run "wscript.exe """ & tempVbsFile & """", 1, True ' חוסם
+    wsh.Run "mshta.exe """ & tempFilePath & """", 1, False
+    Wait(6)
     Set wsh = Nothing
+    On Error GoTo 0
 End Sub
 
-' ⏳ המתן אם תיקיית ריצה קיימת
+' ⏳ המתן אם קיימת תיקיית Report
 Dim basePath, folder
 basePath = "C:\test\repository\copy\src"
 If fileSystemObj.FolderExists(basePath) Then
@@ -35,7 +49,7 @@ If fileSystemObj.FolderExists(basePath) Then
     Next
 End If
 
-' ������ פתיחת הדפדפן
+' ������ פתיחת דפדפן זמין
 If fileSystemObj.FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then
     browserPath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
     browserName = "chrome.exe"
@@ -54,7 +68,7 @@ End If
 objShell.ShellExecute browserPath, iURL, "", "", 1
 Wait(6)
 
-' ������ ניתוח לינק ה-Accounts
+' ������ ניסיון ללחוץ על לינק Accounts
 Dim accountsLinkText, linkDesc, linkCount, matchingLinks
 accountsLinkText = Trim(Parameter("ElementName"))
 If accountsLinkText = "" Then accountsLinkText = "Accounts"
@@ -70,7 +84,7 @@ If linkCount > 0 Then
     matchingLinks(0).Click
     Wait(3)
 
-    ' ������ פתיחת חשבון חדש
+    ' ������ לחיצה על כפתור יצירת חשבון
     If Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Open new account").Exist(5) Then
         Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Open new account").Click
 

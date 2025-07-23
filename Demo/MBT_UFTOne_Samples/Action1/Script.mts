@@ -3,19 +3,29 @@ iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
-' ✅ הודעת שגיאה – נפתחת ב-Notepad (תמיד נתפסת בהקלטה)
+' ✅ הודעת שגיאה – קופצת Always on Top ונשמרת 5 שניות
 Sub ShowPopupMessage(msg)
     On Error Resume Next
     Dim tempFilePath, f, safeMsg
     safeMsg = Replace(msg, """", "'")
-    tempFilePath = "C:\Windows\Temp\popup_message.txt"
+    tempFilePath = "C:\Windows\Temp\uft_popup.hta"
 
     Set f = fileSystemObj.CreateTextFile(tempFilePath, True)
-    f.WriteLine "❌ " & safeMsg
+    f.WriteLine "<html><head><title>Error</title>"
+    f.WriteLine "<hta:application showInTaskbar='yes' windowState='normal' sysMenu='no' caption='yes' border='thin' maximizeButton='no' minimizeButton='no' />"
+    f.WriteLine "<script>"
+    f.WriteLine "function setOnTop() {"
+    f.WriteLine "  try { var shell = new ActiveXObject('WScript.Shell'); shell.AppActivate(document.title); } catch(e) {}"
+    f.WriteLine "  setTimeout('window.close()', 5000);"
+    f.WriteLine "}"
+    f.WriteLine "</script></head>"
+    f.WriteLine "<body onload='setOnTop()' bgcolor='#fff0f0'>"
+    f.WriteLine "<h2 style='color:red; font-family:sans-serif; text-align:center; margin-top:40px'>" & safeMsg & "</h2>"
+    f.WriteLine "</body></html>"
     f.Close
 
-    CreateObject("WScript.Shell").Run "notepad.exe """ & tempFilePath & """", 1, False
-    Wait(5)
+    CreateObject("WScript.Shell").Run "mshta.exe """ & tempFilePath & """", 1, False
+    Wait(6)
     On Error GoTo 0
 End Sub
 
@@ -124,7 +134,7 @@ End If
 
 Wait(3)
 
-' ✅ בדיקה לטעינת הדשבורד
+' ✅ בדיקת דשבורד
 Dim dashboardBtnName
 dashboardBtnName = Trim(Parameter("dashboardButton"))
 If dashboardBtnName = "" Then dashboardBtnName = "dashboardBtn"
