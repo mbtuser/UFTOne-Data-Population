@@ -4,6 +4,12 @@ iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
+' ������ אם תיקיית הדוח קיימת, המתן לפני התחלת הריצה
+If fileSystemObj.FolderExists("C:\test\repository\copy\src\repo-1006\repository\___mbt\_1\MBT_UFTOne_Samples_00001\Report") Then
+    Wait(5)
+End If
+
+' ������ פתיחת דפדפן לפי מה שמותקן
 If fileSystemObj.FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then
     browserPath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
     browserName = "chrome.exe"
@@ -31,11 +37,13 @@ If Trim(accountsLinkText) = "" Then
     accountsLinkText = "Accounts"
 End If
 
+' ������ ניווט לדף החשבונות
 If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link(accountsLinkText).Exist(5) Then
     Wait(3)
     Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link(accountsLinkText).Click
     Wait(3)
 
+    ' ������ פתיחת חשבון חדש
     If Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Open new account").Exist(3) Then
         Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Open new account").Click
 
@@ -59,5 +67,7 @@ Else
     ExitTest
 End If
 
+' ✅ המתן לפני סגירת הדפדפן למניעת בעיות כתיבת דוח
 Wait(3)
 SystemUtil.CloseProcessByName browserName
+

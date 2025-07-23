@@ -4,6 +4,12 @@ iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
+' ⏳ בדוק אם תיקיית הדוח קיימת – המתן לשחרור נעילה
+If fileSystemObj.FolderExists("C:\test\repository\copy\src\repo-1006\repository\___mbt\_1\MBT_UFTOne_Samples_00001\Report") Then
+    Wait(5)
+End If
+
+' ������ פתיחת הדפדפן לפי מה שמותקן
 If fileSystemObj.FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then
     browserPath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
     browserName = "chrome.exe"
@@ -24,6 +30,7 @@ End If
 objShell.ShellExecute browserPath, iURL, "", "", 1
 Wait(5)
 
+' ������ מיפוי אלמנטים לפי שם
 Function GetObjectByName(elementName)
     Select Case elementName
         Case "username"
@@ -41,6 +48,7 @@ Function GetObjectByName(elementName)
     End Select
 End Function
 
+' ������ הכנסת שם משתמש
 Set usernameObj = GetObjectByName(Parameter("usernameField"))
 If Not usernameObj Is Nothing And usernameObj.Exist(3) Then
     usernameObj.Set Parameter("username")
@@ -51,6 +59,7 @@ Else
     ExitTest
 End If
 
+' ������ הכנסת סיסמה
 Set passwordObj = GetObjectByName(Parameter("passwordField"))
 If Not passwordObj Is Nothing And passwordObj.Exist(3) Then
     passwordObj.SetSecure Parameter("password")
@@ -61,6 +70,7 @@ Else
     ExitTest
 End If
 
+' ������️ לחיצה על כפתור התחברות
 Set signInObj = GetObjectByName(Parameter("signInButton"))
 If signInObj Is Nothing Or Not signInObj.Exist(3) Then
     Set loginObj = GetObjectByName(Parameter("loginButton"))
@@ -77,6 +87,7 @@ End If
 
 Wait(3)
 
+' ✅ בדיקה האם עבר לדשבורד
 Set dashObj = GetObjectByName(Parameter("dashboardButton"))
 If Not dashObj Is Nothing And dashObj.Exist(20) Then
     Reporter.ReportEvent micPass, "Login Test", "Login successful"
@@ -87,4 +98,7 @@ Else
     ExitTest
 End If
 
+' ✅ המתן כדי לשחרר משאבים ולמנוע נעילה
+Wait(3)
 SystemUtil.CloseProcessByName browserName
+
