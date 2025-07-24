@@ -36,6 +36,35 @@ End If
 objShell.ShellExecute browserPath, iURL, "", "", 1
 Wait(5)
 
+' Function to inject an error message into the web page
+Function InjectWebErrorMessage(msgText)
+    Dim jsCode
+    jsCode = "var errorDiv = document.createElement('div');" & _
+             "errorDiv.id = 'ciErrorMessage';" & _
+             "errorDiv.style.position = 'fixed';" & _
+             "errorDiv.style.top = '10px';" & _
+             "errorDiv.style.right = '10px';" & _
+             "errorDiv.style.backgroundColor = 'red';" & _
+             "errorDiv.style.color = 'white';" & _
+             "errorDiv.style.padding = '15px';" & _
+             "errorDiv.style.border = '2px solid darkred';" & _
+             "errorDiv.style.borderRadius = '8px';" & _
+             "errorDiv.style.zIndex = '99999';" & _
+             "errorDiv.style.fontSize = '18px';" & _
+             "errorDiv.style.fontWeight = 'bold';" & _
+             "errorDiv.style.animation = 'fadeIn 0.5s';" & _
+             "errorDiv.innerHTML = '" & Replace(msgText, "'", "\'") & "';" & _
+             "var existingError = document.getElementById('ciErrorMessage');" & _
+             "if (existingError) { existingError.parentNode.removeChild(existingError); }" & _
+             "document.body.appendChild(errorDiv);" & _
+             "setTimeout(function() { if(errorDiv.parentNode) errorDiv.parentNode.removeChild(errorDiv); }, 5000);" ' Remove after 5 seconds
+
+    On Error Resume Next ' In case the browser/page is not ready or valid
+    Browser("micClass:=Browser").Page("micClass:=Page").RunScript jsCode
+    On Error GoTo 0
+End Function
+
+
 Dim accountsLinkText
 
 accountsLinkText = Parameter("ElementName")
@@ -69,24 +98,21 @@ If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link(accountsL
 
         Else
 
-            Reporter.ReportEvent micFail, "Account Creation", "Error: 'Name' input field for account creation not found. Displaying message on screen."
-            ' Display on-screen error message for 5 seconds using DeviceReplay
-            DeviceReplay.Screen.DrawText "ERROR: Account Name field not found!", 100, 100, 5, "red", 20
+            Reporter.ReportEvent micFail, "Account Creation", "ERROR: 'Name' input field for account creation not found. Displaying message on web page."
+            InjectWebErrorMessage "ERROR: Account Name field not found!"
             Wait(5) 
         End If
 
     Else
 
-        Reporter.ReportEvent micFail, "Account Creation", "Error: 'Open new account' button not found. Displaying message on screen."
-        ' Display on-screen error message for 5 seconds using DeviceReplay
-        DeviceReplay.Screen.DrawText "ERROR: 'Open new account' button not found!", 100, 150, 5, "red", 20
+        Reporter.ReportEvent micFail, "Account Creation", "ERROR: 'Open new account' button not found. Displaying message on web page."
+        InjectWebErrorMessage "ERROR: 'Open new account' button not found!"
         Wait(5) 
     End If
 Else
 
-    Reporter.ReportEvent micFail, "Navigation", "Error: '" & accountsLinkText & "' link not found on dashboard. Displaying message on screen."
-    ' Display on-screen error message for 5 seconds using DeviceReplay
-    DeviceReplay.Screen.DrawText "ERROR: '" & accountsLinkText & "' link not found!", 100, 200, 5, "red", 20
+    Reporter.ReportEvent micFail, "Navigation", "ERROR: '" & accountsLinkText & "' link not found on dashboard. Displaying message on web page."
+    InjectWebErrorMessage "ERROR: '" & accountsLinkText & "' link not found!"
     Wait(5) 
 End If
 
