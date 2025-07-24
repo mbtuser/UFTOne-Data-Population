@@ -69,19 +69,25 @@ If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link(accountsL
 
         Else
 
-            Reporter.ReportEvent micFail, "Account Creation", "Error: 'Name' input field for account creation not found. Please ensure the element exists."
-            Wait(5) ' This wait still applies to the script execution, but no MsgBox will appear.
+            Reporter.ReportEvent micFail, "Account Creation", "Error: 'Name' input field for account creation not found. Displaying message on screen."
+            ' Display on-screen error message for 5 seconds using DeviceReplay
+            DeviceReplay.Screen.DrawText "ERROR: Account Name field not found!", 100, 100, 5, "red", 20
+            Wait(5) 
         End If
 
     Else
 
-        Reporter.ReportEvent micFail, "Account Creation", "Error: 'Open new account' button not found. Please ensure the element exists."
-        Wait(5) ' This wait still applies to the script execution, but no MsgBox will appear.
+        Reporter.ReportEvent micFail, "Account Creation", "Error: 'Open new account' button not found. Displaying message on screen."
+        ' Display on-screen error message for 5 seconds using DeviceReplay
+        DeviceReplay.Screen.DrawText "ERROR: 'Open new account' button not found!", 100, 150, 5, "red", 20
+        Wait(5) 
     End If
 Else
 
-    Reporter.ReportEvent micFail, "Navigation", "Error: '" & accountsLinkText & "' link not found on dashboard. Please ensure the element exists."
-    Wait(5) ' This wait still applies to the script execution, but no MsgBox will appear.
+    Reporter.ReportEvent micFail, "Navigation", "Error: '" & accountsLinkText & "' link not found on dashboard. Displaying message on screen."
+    ' Display on-screen error message for 5 seconds using DeviceReplay
+    DeviceReplay.Screen.DrawText "ERROR: '" & accountsLinkText & "' link not found!", 100, 200, 5, "red", 20
+    Wait(5) 
 End If
 
 Wait(3)

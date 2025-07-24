@@ -75,8 +75,10 @@ If Not usernameObj Is Nothing And usernameObj.Exist(3) Then
     Reporter.ReportEvent micPass, "Username Set", "Username set successfully"
 Else
 
-    Reporter.ReportEvent micFail, "Username Not Found", "Error: Username field not found. Please ensure the element exists."
-    Wait(5) ' This wait still applies to the script execution, but no MsgBox will appear.
+    Reporter.ReportEvent micFail, "Username Not Found", "Error: Username field not found. Displaying message on screen."
+    ' Display on-screen error message for 5 seconds using DeviceReplay
+    DeviceReplay.Screen.DrawText "ERROR: Username field not found!", 100, 100, 5, "red", 20
+    Wait(5) 
 End If
 
 Set passwordObj = GetObjectByName(Parameter("passwordField"))
@@ -87,8 +89,10 @@ If Not passwordObj Is Nothing And passwordObj.Exist(3) Then
     Reporter.ReportEvent micPass, "Password Set", "Password set successfully"
 Else
 
-    Reporter.ReportEvent micFail, "Password Not Found", "Error: Password field not found. Please ensure the element exists."
-    Wait(5) ' This wait still applies to the script execution, but no MsgBox will appear.
+    Reporter.ReportEvent micFail, "Password Not Found", "Error: Password field not found. Displaying message on screen."
+    ' Display on-screen error message for 5 seconds using DeviceReplay
+    DeviceReplay.Screen.DrawText "ERROR: Password field not found!", 100, 150, 5, "red", 20
+    Wait(5) 
 End If
 
 Set signInObj = GetObjectByName(Parameter("signInButton"))
@@ -102,8 +106,10 @@ ElseIf Not loginObj Is Nothing And loginObj.Exist(3) Then
     loginObj.Click
 Else
 
-    Reporter.ReportEvent micFail, "Login Button", "Error: Sign-In/Login button not found. Please ensure the element exists."
-    Wait(5) ' This wait still applies to the script execution, but no MsgBox will appear.
+    Reporter.ReportEvent micFail, "Login Button", "Error: Sign-In/Login button not found. Displaying message on screen."
+    ' Display on-screen error message for 5 seconds using DeviceReplay
+    DeviceReplay.Screen.DrawText "ERROR: Login button not found!", 100, 200, 5, "red", 20
+    Wait(5) 
 End If
 
 Wait(3)
@@ -116,8 +122,10 @@ If Not dashObj Is Nothing And dashObj.Exist(20) Then
     dashObj.Click
 Else
 
-    Reporter.ReportEvent micFail, "Login Test", "Error: Dashboard button not found. Login may have failed or the element does not exist."
-    Wait(5) ' This wait still applies to the script execution, but no MsgBox will appear.
+    Reporter.ReportEvent micFail, "Login Test", "Error: Dashboard button not found. Login may have failed or the element does not exist. Displaying message on screen."
+    ' Display on-screen error message for 5 seconds using DeviceReplay
+    DeviceReplay.Screen.DrawText "ERROR: Dashboard button not found!", 100, 250, 5, "red", 20
+    Wait(5) 
 End If
 
 
