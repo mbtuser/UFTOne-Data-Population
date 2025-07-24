@@ -1,62 +1,93 @@
 ﻿Dim iURL, objShell, fileSystemObj, browserPath, browserName
+
+
 iURL = "https://advantageonlinebanking.com/dashboard"
 Set objShell = CreateObject("Shell.Application")
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
 
-' ✅ הודעת שגיאה שתוקלט ב־UFT עם MsgBox חוסם
-Sub ShowPopupMessage(msg)
-    On Error Resume Next
-    msg = Replace(msg, """", "'")
-    MsgBox msg, 48, "❌ UFT Error"
-    On Error GoTo 0
-End Sub
-
-' ������ פתיחת דפדפן זמין
 If fileSystemObj.FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then
+
     browserPath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+
     browserName = "chrome.exe"
 ElseIf fileSystemObj.FileExists("C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe") Then
+
     browserPath = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+
     browserName = "msedge.exe"
 ElseIf fileSystemObj.FileExists("C:\Program Files\Mozilla Firefox\firefox.exe") Then
+
     browserPath = "C:\Program Files\Mozilla Firefox\firefox.exe"
+
+    browserName = "firefox.exe"
+ElseIf fileSystemObj.FileExists("C:\Program Files (x86)\Mozilla Firefox\firefox.exe") Then
+
+    browserPath = "C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
+
     browserName = "firefox.exe"
 Else
-    ShowPopupMessage "❌ No supported browser found"
-    Reporter.ReportEvent micFail, "Browser Launch", "No supported browser found"
+
+    Reporter.ReportEvent micFail, "Browser Launch", "No supported browser found on this machine"
+
     ExitTest
 End If
+
 
 objShell.ShellExecute browserPath, iURL, "", "", 1
-Wait(6)
+Wait(5)
 
-' ������ ניסיון ללחוץ על לינק Accounts
-Dim accountsLinkText, linkDesc, linkCount, matchingLinks
-On Error Resume Next
-accountsLinkText = Trim(Parameter("ElementName"))
-If accountsLinkText = "" Then accountsLinkText = "Accounts"
-On Error GoTo 0
+Dim accountsLinkText
 
-Set linkDesc = Description.Create()
-linkDesc("micclass").Value = "Link"
-linkDesc("innertext").Value = accountsLinkText
+accountsLinkText = Parameter("ElementName")
 
-Set matchingLinks = Browser("CreationTime:=0").Page("title:=.*").ChildObjects(linkDesc)
-If Not matchingLinks Is Nothing Then
-    linkCount = matchingLinks.Count
-Else
-    linkCount = 0
+If Trim(accountsLinkText) = "" Then
+
+    accountsLinkText = "Accounts"
 End If
 
-If linkCount > 0 Then
-    matchingLinks(0).Click
-    Wait(2)
-    Reporter.ReportEvent micPass, "Navigation", "Clicked '" & accountsLinkText & "'"
+If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link(accountsLinkText).Exist(5) Then
+
+    Wait(3)
+
+    Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link("Accounts").Click
+
+    Wait(3)
+
+
+    If Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Open new account").Exist(3) Then
+
+        Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Open new account").Click
+
+
+        If Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebEdit("name").Exist(3) Then
+
+            Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebEdit("name").Set Parameter("accountName")
+
+            Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Create").Click
+
+            Reporter.ReportEvent micPass, "Account Creation", "New account created successfully"
+
+        Else
+
+            Reporter.ReportEvent micFail, "Account Creation", "Name input field not found"
+            MsgBox "Error: 'Name' input field for account creation not found. Please ensure the element exists.", vbExclamation, "Element Error"
+            Wait(5)
+        End If
+
+    Else
+
+        Reporter.ReportEvent micFail, "Account Creation", "'Open new account' button not found"
+        MsgBox "Error: 'Open new account' button not found. Please ensure the element exists.", vbExclamation, "Element Error"
+        Wait(5)
+    End If
 Else
-    ShowPopupMessage "❌ Link '" & accountsLinkText & "' not found"
-    Reporter.ReportEvent micFail, "Navigation", "Link '" & accountsLinkText & "' not found"
-    ExitTest
+
+    Reporter.ReportEvent micFail, "Navigation", "'" & accountsLinkText & "' link not found on dashboard"
+    MsgBox "Error: '" & accountsLinkText & "' link not found on dashboard. Please ensure the element exists.", vbExclamation, "Element Error"
+    Wait(5)
 End If
+
+Wait(3)
+
 
 SystemUtil.CloseProcessByName browserName
-
