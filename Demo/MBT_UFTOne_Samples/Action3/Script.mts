@@ -69,22 +69,19 @@ If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link(accountsL
 
         Else
 
-            Reporter.ReportEvent micFail, "Account Creation", "Name input field not found"
-            MsgBox "Error: 'Name' input field for account creation not found. Please ensure the element exists.", vbExclamation, "Element Error"
-            Wait(5)
+            Reporter.ReportEvent micFail, "Account Creation", "Error: 'Name' input field for account creation not found. Please ensure the element exists."
+            Wait(5) ' This wait still applies to the script execution, but no MsgBox will appear.
         End If
 
     Else
 
-        Reporter.ReportEvent micFail, "Account Creation", "'Open new account' button not found"
-        MsgBox "Error: 'Open new account' button not found. Please ensure the element exists.", vbExclamation, "Element Error"
-        Wait(5)
+        Reporter.ReportEvent micFail, "Account Creation", "Error: 'Open new account' button not found. Please ensure the element exists."
+        Wait(5) ' This wait still applies to the script execution, but no MsgBox will appear.
     End If
 Else
 
-    Reporter.ReportEvent micFail, "Navigation", "'" & accountsLinkText & "' link not found on dashboard"
-    MsgBox "Error: '" & accountsLinkText & "' link not found on dashboard. Please ensure the element exists.", vbExclamation, "Element Error"
-    Wait(5)
+    Reporter.ReportEvent micFail, "Navigation", "Error: '" & accountsLinkText & "' link not found on dashboard. Please ensure the element exists."
+    Wait(5) ' This wait still applies to the script execution, but no MsgBox will appear.
 End If
 
 Wait(3)

@@ -65,7 +65,7 @@ Function GetObjectByName(elementName)
             Set GetObjectByName = Nothing
 
     End Select
-End Function 
+End Function
 
 Set usernameObj = GetObjectByName(Parameter("usernameField"))
 If Not usernameObj Is Nothing And usernameObj.Exist(3) Then
@@ -75,9 +75,8 @@ If Not usernameObj Is Nothing And usernameObj.Exist(3) Then
     Reporter.ReportEvent micPass, "Username Set", "Username set successfully"
 Else
 
-    Reporter.ReportEvent micFail, "Username Not Found", "Failed to find username field"
-    MsgBox "Error: Username field not found. Please ensure the element exists.", vbExclamation, "Element Error"
-    Wait(5)
+    Reporter.ReportEvent micFail, "Username Not Found", "Error: Username field not found. Please ensure the element exists."
+    Wait(5) ' This wait still applies to the script execution, but no MsgBox will appear.
 End If
 
 Set passwordObj = GetObjectByName(Parameter("passwordField"))
@@ -88,9 +87,8 @@ If Not passwordObj Is Nothing And passwordObj.Exist(3) Then
     Reporter.ReportEvent micPass, "Password Set", "Password set successfully"
 Else
 
-    Reporter.ReportEvent micFail, "Password Not Found", "Failed to find password field"
-    MsgBox "Error: Password field not found. Please ensure the element exists.", vbExclamation, "Element Error"
-    Wait(5)
+    Reporter.ReportEvent micFail, "Password Not Found", "Error: Password field not found. Please ensure the element exists."
+    Wait(5) ' This wait still applies to the script execution, but no MsgBox will appear.
 End If
 
 Set signInObj = GetObjectByName(Parameter("signInButton"))
@@ -104,9 +102,8 @@ ElseIf Not loginObj Is Nothing And loginObj.Exist(3) Then
     loginObj.Click
 Else
 
-    Reporter.ReportEvent micFail, "Login Button", "No login button found"
-    MsgBox "Error: Sign-In/Login button not found. Please ensure the element exists.", vbExclamation, "Element Error"
-    Wait(5)
+    Reporter.ReportEvent micFail, "Login Button", "Error: Sign-In/Login button not found. Please ensure the element exists."
+    Wait(5) ' This wait still applies to the script execution, but no MsgBox will appear.
 End If
 
 Wait(3)
@@ -119,9 +116,8 @@ If Not dashObj Is Nothing And dashObj.Exist(20) Then
     dashObj.Click
 Else
 
-    Reporter.ReportEvent micFail, "Login Test", "Login failed"
-    MsgBox "Error: Dashboard button not found. Login may have failed or the element does not exist.", vbExclamation, "Element Error"
-    Wait(5)
+    Reporter.ReportEvent micFail, "Login Test", "Error: Dashboard button not found. Login may have failed or the element does not exist."
+    Wait(5) ' This wait still applies to the script execution, but no MsgBox will appear.
 End If
 
 
