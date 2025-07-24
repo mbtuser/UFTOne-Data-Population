@@ -36,31 +36,46 @@ End If
 objShell.ShellExecute browserPath, iURL, "", "", 1
 Wait(5)
 
-' Function to inject an error message into the web page
+' Function to inject a visual error message into the current web page
 Function InjectWebErrorMessage(msgText)
     Dim jsCode
+    ' JavaScript code to create a styled DIV element, add it to the body, and remove it after 5 seconds
     jsCode = "var errorDiv = document.createElement('div');" & _
-             "errorDiv.id = 'ciErrorMessage';" & _
+             "errorDiv.id = 'ciErrorOverlay';" & _
              "errorDiv.style.position = 'fixed';" & _
-             "errorDiv.style.top = '10px';" & _
-             "errorDiv.style.right = '10px';" & _
+             "errorDiv.style.top = '10%'; " & _
+             "errorDiv.style.left = '50%'; " & _
+             "errorDiv.style.transform = 'translate(-50%, -50%)';" & _
              "errorDiv.style.backgroundColor = 'red';" & _
              "errorDiv.style.color = 'white';" & _
-             "errorDiv.style.padding = '15px';" & _
-             "errorDiv.style.border = '2px solid darkred';" & _
-             "errorDiv.style.borderRadius = '8px';" & _
+             "errorDiv.style.padding = '20px 30px';" & _
+             "errorDiv.style.border = '3px solid darkred';" & _
+             "errorDiv.style.borderRadius = '10px';" & _
              "errorDiv.style.zIndex = '99999';" & _
-             "errorDiv.style.fontSize = '18px';" & _
+             "errorDiv.style.fontSize = '24px';" & _
              "errorDiv.style.fontWeight = 'bold';" & _
-             "errorDiv.style.animation = 'fadeIn 0.5s';" & _
+             "errorDiv.style.textAlign = 'center';" & _
+             "errorDiv.style.boxShadow = '0 0 15px rgba(0,0,0,0.5)';" & _
+             "errorDiv.style.opacity = '0';" & _
+             "errorDiv.style.transition = 'opacity 0.5s ease-in-out';" & _
              "errorDiv.innerHTML = '" & Replace(msgText, "'", "\'") & "';" & _
-             "var existingError = document.getElementById('ciErrorMessage');" & _
+             "var existingError = document.getElementById('ciErrorOverlay');" & _
              "if (existingError) { existingError.parentNode.removeChild(existingError); }" & _
              "document.body.appendChild(errorDiv);" & _
-             "setTimeout(function() { if(errorDiv.parentNode) errorDiv.parentNode.removeChild(errorDiv); }, 5000);" ' Remove after 5 seconds
+             "setTimeout(function() { errorDiv.style.opacity = '1'; }, 100);" & _
+             "setTimeout(function() { " & _
+             "    if(errorDiv.parentNode) { " & _
+             "        errorDiv.style.opacity = '0';" & _
+             "        setTimeout(function() { if(errorDiv.parentNode) errorDiv.parentNode.removeChild(errorDiv); }, 500); " & _
+             "    }" & _
+             "}, 5000);" ' Show for 5 seconds
 
-    On Error Resume Next ' In case the browser/page is not ready or valid
+    On Error Resume Next ' Use On Error Resume Next for robustness if the page is not fully loaded
+    ' Target the current active browser and page
     Browser("micClass:=Browser").Page("micClass:=Page").RunScript jsCode
+    If Err.Number <> 0 Then
+        Reporter.ReportEvent micWarning, "JavaScript Injection", "Could not inject error message: " & Err.Description
+    End If
     On Error GoTo 0
 End Function
 
@@ -98,22 +113,22 @@ If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link(accountsL
 
         Else
 
-            Reporter.ReportEvent micFail, "Account Creation", "ERROR: 'Name' input field for account creation not found. Displaying message on web page."
+            Reporter.ReportEvent micFail, "Account Creation", "ERROR: 'Name' input field for account creation not found. Injected message to web page."
             InjectWebErrorMessage "ERROR: Account Name field not found!"
-            Wait(5) 
+            Wait(5) ' Keep the wait to ensure message is visible in recording
         End If
 
     Else
 
-        Reporter.ReportEvent micFail, "Account Creation", "ERROR: 'Open new account' button not found. Displaying message on web page."
+        Reporter.ReportEvent micFail, "Account Creation", "ERROR: 'Open new account' button not found. Injected message to web page."
         InjectWebErrorMessage "ERROR: 'Open new account' button not found!"
-        Wait(5) 
+        Wait(5) ' Keep the wait to ensure message is visible in recording
     End If
 Else
 
-    Reporter.ReportEvent micFail, "Navigation", "ERROR: '" & accountsLinkText & "' link not found on dashboard. Displaying message on web page."
+    Reporter.ReportEvent micFail, "Navigation", "ERROR: '" & accountsLinkText & "' link not found on dashboard. Injected message to web page."
     InjectWebErrorMessage "ERROR: '" & accountsLinkText & "' link not found!"
-    Wait(5) 
+    Wait(5) ' Keep the wait to ensure message is visible in recording
 End If
 
 Wait(3)
