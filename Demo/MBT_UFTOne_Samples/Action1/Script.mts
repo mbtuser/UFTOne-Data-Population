@@ -36,45 +36,17 @@ End If
 objShell.ShellExecute browserPath, iURL, "", "", 1
 Wait(5)
 
-' Function to inject a visual error message into the current web page
-Function InjectWebErrorMessage(msgText)
-    Dim jsCode
-    ' JavaScript code to create a styled DIV element, add it to the body, and remove it after 5 seconds
-    jsCode = "var errorDiv = document.createElement('div');" & _
-             "errorDiv.id = 'ciErrorOverlay';" & _
-             "errorDiv.style.position = 'fixed';" & _
-             "errorDiv.style.top = '10%'; " & _
-             "errorDiv.style.left = '50%'; " & _
-             "errorDiv.style.transform = 'translate(-50%, -50%)';" & _
-             "errorDiv.style.backgroundColor = 'red';" & _
-             "errorDiv.style.color = 'white';" & _
-             "errorDiv.style.padding = '20px 30px';" & _
-             "errorDiv.style.border = '3px solid darkred';" & _
-             "errorDiv.style.borderRadius = '10px';" & _
-             "errorDiv.style.zIndex = '99999';" & _
-             "errorDiv.style.fontSize = '24px';" & _
-             "errorDiv.style.fontWeight = 'bold';" & _
-             "errorDiv.style.textAlign = 'center';" & _
-             "errorDiv.style.boxShadow = '0 0 15px rgba(0,0,0,0.5)';" & _
-             "errorDiv.style.opacity = '0';" & _
-             "errorDiv.style.transition = 'opacity 0.5s ease-in-out';" & _
-             "errorDiv.innerHTML = '" & Replace(msgText, "'", "\'") & "';" & _
-             "var existingError = document.getElementById('ciErrorOverlay');" & _
-             "if (existingError) { existingError.parentNode.removeChild(existingError); }" & _
-             "document.body.appendChild(errorDiv);" & _
-             "setTimeout(function() { errorDiv.style.opacity = '1'; }, 100);" & _
-             "setTimeout(function() { " & _
-             "    if(errorDiv.parentNode) { " & _
-             "        errorDiv.style.opacity = '0';" & _
-             "        setTimeout(function() { if(errorDiv.parentNode) errorDiv.parentNode.removeChild(errorDiv); }, 500); " & _
-             "    }" & _
-             "}, 5000);" ' Show for 5 seconds
-
-    On Error Resume Next ' Use On Error Resume Next for robustness if the page is not fully loaded
-    ' Target the current active browser and page
-    Browser("micClass:=Browser").Page("micClass:=Page").RunScript jsCode
-    If Err.Number <> 0 Then
-        Reporter.ReportEvent micWarning, "JavaScript Injection", "Could not inject error message: " & Err.Description
+' Function to take an area screenshot and add it to the report
+' x, y: top-left coordinates of the area
+' width, height: dimensions of the area
+' msg: description for the report
+Function TakeAreaScreenshot(x, y, width, height, msg)
+    On Error Resume Next ' Handle cases where screenshot might fail in headless mode
+    DeviceReplay.Screen.CaptureBitmap "", True, x, y, width, height
+    If Err.Number = 0 Then
+        Reporter.ReportEvent micWarning, "Area Screenshot", msg & " (Screenshot attached)"
+    Else
+        Reporter.ReportEvent micWarning, "Area Screenshot", msg & " (Failed to capture specific area: " & Err.Description & ")"
     End If
     On Error GoTo 0
 End Function
@@ -116,9 +88,9 @@ If Not usernameObj Is Nothing And usernameObj.Exist(3) Then
     usernameObj.Set Parameter("username")
     Reporter.ReportEvent micPass, "Username Set", "Username set successfully"
 Else
-    Reporter.ReportEvent micFail, "Username Not Found", "ERROR: Username field not found. Injected message to web page."
-    InjectWebErrorMessage "ERROR: Username field '" & Parameter("usernameField") & "' not found!"
-    Wait(5) ' Keep the wait to ensure message is visible in recording
+    Reporter.ReportEvent micFail, "Username Not Found", "ERROR: Username field '" & Parameter("usernameField") & "' not found on page."
+    TakeAreaScreenshot 50, 50, 400, 100, "Expected Username field location" ' Adjust coordinates as needed
+    Wait(5) ' Keep the wait for effect in recording
 End If
 
 Set passwordObj = GetObjectByName(Parameter("passwordField"))
@@ -126,9 +98,9 @@ If Not passwordObj Is Nothing And passwordObj.Exist(3) Then
     passwordObj.SetSecure Parameter("password")
     Reporter.ReportEvent micPass, "Password Set", "Password set successfully"
 Else
-    Reporter.ReportEvent micFail, "Password Not Found", "ERROR: Password field not found. Injected message to web page."
-    InjectWebErrorMessage "ERROR: Password field '" & Parameter("passwordField") & "' not found!"
-    Wait(5) ' Keep the wait to ensure message is visible in recording
+    Reporter.ReportEvent micFail, "Password Not Found", "ERROR: Password field '" & Parameter("passwordField") & "' not found on page."
+    TakeAreaScreenshot 50, 150, 400, 100, "Expected Password field location" ' Adjust coordinates as needed
+    Wait(5) ' Keep the wait for effect in recording
 End If
 
 Set signInObj = GetObjectByName(Parameter("signInButton"))
@@ -139,9 +111,9 @@ If Not signInObj Is Nothing And signInObj.Exist(3) Then
 ElseIf Not loginObj Is Nothing And loginObj.Exist(3) Then
     loginObj.Click
 Else
-    Reporter.ReportEvent micFail, "Login Button", "ERROR: Sign-In/Login button not found. Injected message to web page."
-    InjectWebErrorMessage "ERROR: Login button ('" & Parameter("signInButton") & "' or '" & Parameter("loginButton") & "') not found!"
-    Wait(5) ' Keep the wait to ensure message is visible in recording
+    Reporter.ReportEvent micFail, "Login Button", "ERROR: Login button ('" & Parameter("signInButton") & "' or '" & Parameter("loginButton") & "') not found on page."
+    TakeAreaScreenshot 50, 250, 400, 100, "Expected Login button location" ' Adjust coordinates as needed
+    Wait(5) ' Keep the wait for effect in recording
 End If
 
 Wait(3)
@@ -151,10 +123,11 @@ If Not dashObj Is Nothing And dashObj.Exist(20) Then
     Reporter.ReportEvent micPass, "Login Test", "Login successful"
     dashObj.Click
 Else
-    Reporter.ReportEvent micFail, "Login Test", "ERROR: Dashboard button not found. Login may have failed or the element does not exist. Injected message to web page."
-    InjectWebErrorMessage "ERROR: Dashboard button ('" & Parameter("dashboardButton") & "') not found!"
-    Wait(5) ' Keep the wait to ensure message is visible in recording
+    Reporter.ReportEvent micFail, "Login Test", "ERROR: Dashboard button ('" & Parameter("dashboardButton") & "') not found. Login failed or element missing from page."
+    TakeAreaScreenshot 50, 350, 400, 100, "Expected Dashboard button location" ' Adjust coordinates as needed
+    Wait(5) ' Keep the wait for effect in recording
 End If
 
 
 SystemUtil.CloseProcessByName browserName
+

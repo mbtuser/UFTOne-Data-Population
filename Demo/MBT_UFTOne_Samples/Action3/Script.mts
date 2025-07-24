@@ -36,45 +36,17 @@ End If
 objShell.ShellExecute browserPath, iURL, "", "", 1
 Wait(5)
 
-' Function to inject a visual error message into the current web page
-Function InjectWebErrorMessage(msgText)
-    Dim jsCode
-    ' JavaScript code to create a styled DIV element, add it to the body, and remove it after 5 seconds
-    jsCode = "var errorDiv = document.createElement('div');" & _
-             "errorDiv.id = 'ciErrorOverlay';" & _
-             "errorDiv.style.position = 'fixed';" & _
-             "errorDiv.style.top = '10%'; " & _
-             "errorDiv.style.left = '50%'; " & _
-             "errorDiv.style.transform = 'translate(-50%, -50%)';" & _
-             "errorDiv.style.backgroundColor = 'red';" & _
-             "errorDiv.style.color = 'white';" & _
-             "errorDiv.style.padding = '20px 30px';" & _
-             "errorDiv.style.border = '3px solid darkred';" & _
-             "errorDiv.style.borderRadius = '10px';" & _
-             "errorDiv.style.zIndex = '99999';" & _
-             "errorDiv.style.fontSize = '24px';" & _
-             "errorDiv.style.fontWeight = 'bold';" & _
-             "errorDiv.style.textAlign = 'center';" & _
-             "errorDiv.style.boxShadow = '0 0 15px rgba(0,0,0,0.5)';" & _
-             "errorDiv.style.opacity = '0';" & _
-             "errorDiv.style.transition = 'opacity 0.5s ease-in-out';" & _
-             "errorDiv.innerHTML = '" & Replace(msgText, "'", "\'") & "';" & _
-             "var existingError = document.getElementById('ciErrorOverlay');" & _
-             "if (existingError) { existingError.parentNode.removeChild(existingError); }" & _
-             "document.body.appendChild(errorDiv);" & _
-             "setTimeout(function() { errorDiv.style.opacity = '1'; }, 100);" & _
-             "setTimeout(function() { " & _
-             "    if(errorDiv.parentNode) { " & _
-             "        errorDiv.style.opacity = '0';" & _
-             "        setTimeout(function() { if(errorDiv.parentNode) errorDiv.parentNode.removeChild(errorDiv); }, 500); " & _
-             "    }" & _
-             "}, 5000);" ' Show for 5 seconds
-
-    On Error Resume Next ' Use On Error Resume Next for robustness if the page is not fully loaded
-    ' Target the current active browser and page
-    Browser("micClass:=Browser").Page("micClass:=Page").RunScript jsCode
-    If Err.Number <> 0 Then
-        Reporter.ReportEvent micWarning, "JavaScript Injection", "Could not inject error message: " & Err.Description
+' Function to take an area screenshot and add it to the report
+' x, y: top-left coordinates of the area
+' width, height: dimensions of the area
+' msg: description for the report
+Function TakeAreaScreenshot(x, y, width, height, msg)
+    On Error Resume Next ' Handle cases where screenshot might fail in headless mode
+    DeviceReplay.Screen.CaptureBitmap "", True, x, y, width, height
+    If Err.Number = 0 Then
+        Reporter.ReportEvent micWarning, "Area Screenshot", msg & " (Screenshot attached)"
+    Else
+        Reporter.ReportEvent micWarning, "Area Screenshot", msg & " (Failed to capture specific area: " & Err.Description & ")"
     End If
     On Error GoTo 0
 End Function
@@ -87,40 +59,37 @@ If Trim(accountsLinkText) = "" Then
     accountsLinkText = "Accounts"
 End If
 
-' *** שינוי חשוב כאן: הגדרת האלמנט באופן פרוגרמטי ***
-' במקום Link(accountsLinkText) שמחפש ברפוזיטורי, נגדיר תכונות כמו innertext
+' *** חשוב: הגדרת האלמנטים באופן פרוגרמטי כדי לעקוף את בעיות ה-Object Repository ***
 Set objAccountsLink = Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link("innertext:=" & accountsLinkText, "micClass:=Link")
 
-If objAccountsLink.Exist(5) Then ' עכשיו בדיקת Exist תתבצע על אלמנט שנמצא על בסיס תכונות
+If objAccountsLink.Exist(5) Then
     Wait(3)
-    objAccountsLink.Click ' נשתמש באובייקט שזיהינו
+    objAccountsLink.Click
     Wait(3)
 
-    ' עבור כפתור "Open new account" - נגדיר אותו גם פרוגרמטית (אם לא מופיע ברפוזיטורי)
     Set objOpenNewAccountButton = Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("innertext:=Open new account", "micClass:=WebButton")
     If objOpenNewAccountButton.Exist(3) Then
         objOpenNewAccountButton.Click
 
-        ' עבור שדה "name" - נגדיר אותו גם פרוגרמטית
         Set objAccountNameField = Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebEdit("name:=name", "micClass:=WebEdit")
         If objAccountNameField.Exist(3) Then
             objAccountNameField.Set Parameter("accountName")
             Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Create").Click
             Reporter.ReportEvent micPass, "Account Creation", "New account created successfully"
         Else
-            Reporter.ReportEvent micFail, "Account Creation", "ERROR: 'Name' input field for account creation not found. Injected message to web page."
-            InjectWebErrorMessage "ERROR: Account Name field not found!"
-            Wait(5) ' Keep the wait to ensure message is visible in recording
+            Reporter.ReportEvent micFail, "Account Creation", "ERROR: 'Name' input field for account creation not found. Expected to be at top-left of popup/form."
+            TakeAreaScreenshot 100, 100, 500, 200, "Expected Account Name field location" ' Adjust coordinates as needed
+            Wait(5)
         End If
     Else
-        Reporter.ReportEvent micFail, "Account Creation", "ERROR: 'Open new account' button not found. Injected message to web page."
-        InjectWebErrorMessage "ERROR: 'Open new account' button not found!"
-        Wait(5) ' Keep the wait to ensure message is visible in recording
+        Reporter.ReportEvent micFail, "Account Creation", "ERROR: 'Open new account' button not found. Expected on Accounts page."
+        TakeAreaScreenshot 50, 50, 400, 100, "Expected 'Open new account' button location" ' Adjust coordinates as needed
+        Wait(5)
     End If
 Else
-    Reporter.ReportEvent micFail, "Navigation", "ERROR: '" & accountsLinkText & "' link not found on dashboard. Injected message to web page."
-    InjectWebErrorMessage "ERROR: '" & accountsLinkText & "' link not found!"
-    Wait(5) ' Keep the wait to ensure message is visible in recording
+    Reporter.ReportEvent micFail, "Navigation", "ERROR: '" & accountsLinkText & "' link not found on dashboard. Expected to be in navigation menu."
+    TakeAreaScreenshot 50, 50, 400, 100, "Expected Accounts link location" ' Adjust coordinates as needed
+    Wait(5)
 End If
 
 Wait(3)
