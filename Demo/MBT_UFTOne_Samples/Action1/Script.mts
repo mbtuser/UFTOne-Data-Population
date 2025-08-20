@@ -1,7 +1,13 @@
 ﻿' =============================================================================
-' ✅ פונקציה להצגת שכבת שגיאה ויזואלית על גבי דף האינטרנט.
+' ✅ פונקציה להצגת שכבת שגיאה - מקבלת כעת את אובייקט הדף
 ' =============================================================================
-Sub ShowErrorOnPage(errorMessage)
+Sub ShowErrorOnPage(oPage, errorMessage)
+    ' בדיקה שהעברנו אובייקט דף תקין
+    If oPage Is Nothing Then
+        Reporter.ReportEvent micWarning, "ShowErrorOnPage", "Page object was not provided. Cannot display visual error."
+        Exit Sub
+    End If
+
     On Error Resume Next
     Dim jsErrorMessage
     jsErrorMessage = Replace(errorMessage, "'", "\'")
@@ -13,13 +19,22 @@ Sub ShowErrorOnPage(errorMessage)
              "overlayDiv.style.cssText = 'position:fixed; top:30px; left:50%; transform:translateX(-50%); padding:25px; background-color:rgba(220, 53, 69, 0.9); color:white; font-size:22px; font-weight:bold; border:4px solid black; border-radius:12px; z-index:999999; box-shadow: 0 0 20px rgba(0,0,0,0.7); font-family:Arial,sans-serif; text-align:center;';" & _
              "overlayDiv.innerHTML = '❌ UFT One Test Failure ❌<hr style=""border-color:white; margin:10px 0;""><p style=""font-size:18px; font-weight:normal;"">" & jsErrorMessage & "</p>';" & _
              "if (document.body) { document.body.appendChild(overlayDiv); } else { console.error('UFT Error: " & jsErrorMessage & "'); }"
-    Browser("micclass:=Browser").Page("micclass:=Page").RunScript(jsCode)
+    
+    ' הזרקת הסקריפט לאובייקט הדף הספציפי שהעברנו
+    oPage.RunScript(jsCode)
+    
+    If Err.Number <> 0 Then
+        Reporter.ReportEvent micWarning, "ShowErrorOnPage", "Failed to inject visual error. Error: " & Err.Description
+    End If
+    
     Wait(5) ' המתנה כדי שההודעה תוקלט בוידאו
     On Error GoTo 0
 End Sub
 
-' --- START OF ORIGINAL ACTION LOGIC ---
 
+' =============================================================================
+' 								 START OF ACTION LOGIC
+' =============================================================================
 Dim iURL, fileSystemObj, browserPath, browserName
 iURL = "https://advantageonlinebanking.com/dashboard"
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
@@ -35,71 +50,67 @@ Else
     ExitTest
 End If
 
-' שימוש בפקודה אמינה יותר של UFT לפתיחת דפדפן
 SystemUtil.Run browserPath, iURL
 Wait(5)
 
-Function GetObjectByName(elementName)
-    Select Case elementName
-        Case "username"
-            Set GetObjectByName = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("username")
-        Case "password"
-            Set GetObjectByName = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("password")
-        Case "signIn"
-            Set GetObjectByName = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebButton("Sign-In")
-        Case "login"
-            Set GetObjectByName = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebButton("Login")
-        Case "dashboardBtn"
-            Set GetObjectByName = Browser("Dashboard - Advantage_2").Page("Dashboard - Advantage").WebElement("Bank Accounts")
-        Case Else
-            Set GetObjectByName = Nothing
-    End Select
-End Function
+' --- הגדרת אובייקטים מרכזיים פעם אחת ---
+Dim oBrowser, oPage
+Set oBrowser = Browser("title:=Home - Advantage Bank")
+Set oPage = oBrowser.Page("title:=Home - Advantage Bank")
 
-Dim usernameObj, passwordObj, signInObj, loginObj, dashObj
+Dim usernameObj, passwordObj, signInObj, loginObj, dashObj, errorMsg
 
-Set usernameObj = GetObjectByName(Parameter("usernameField"))
-If Not usernameObj Is Nothing And usernameObj.Exist(3) Then
+' שימוש ישיר ב-oPage לזיהוי אובייקטים
+Set usernameObj = oPage.WebEdit("name:=" & Parameter("usernameField"))
+If usernameObj.Exist(3) Then
     usernameObj.Set Parameter("username")
     Reporter.ReportEvent micPass, "Username Set", "Username set successfully"
 Else
-    ShowErrorOnPage "Failed to find username field using identifier: '" & Parameter("usernameField") & "'"
-    Reporter.ReportEvent micFail, "Username Not Found", "Failed to find username field"
+    errorMsg = "Failed to find username field using identifier: '" & Parameter("usernameField") & "'"
+    ShowErrorOnPage oPage, errorMsg ' <-- העברת אובייקט הדף
+    Reporter.ReportEvent micFail, "Username Not Found", errorMsg
     ExitTest
 End If
 
-Set passwordObj = GetObjectByName(Parameter("passwordField"))
-If Not passwordObj Is Nothing And passwordObj.Exist(3) Then
+Set passwordObj = oPage.WebEdit("name:=" & Parameter("passwordField"))
+If passwordObj.Exist(3) Then
     passwordObj.SetSecure Parameter("password")
     Reporter.ReportEvent micPass, "Password Set", "Password set successfully"
 Else
-    ShowErrorOnPage "Failed to find password field using identifier: '" & Parameter("passwordField") & "'"
-    Reporter.ReportEvent micFail, "Password Not Found", "Failed to find password field"
+    errorMsg = "Failed to find password field using identifier: '" & Parameter("passwordField") & "'"
+    ShowErrorOnPage oPage, errorMsg ' <-- העברת אובייקט הדף
+    Reporter.ReportEvent micFail, "Password Not Found", errorMsg
     ExitTest
 End If
 
-Set signInObj = GetObjectByName(Parameter("signInButton"))
-Set loginObj  = GetObjectByName(Parameter("loginButton"))
+Set signInObj = oPage.WebButton("name:=" & Parameter("signInButton"))
+Set loginObj  = oPage.WebButton("name:=" & Parameter("loginButton"))
 
-If Not signInObj Is Nothing And signInObj.Exist(3) Then
+If signInObj.Exist(3) Then
     signInObj.Click
-ElseIf Not loginObj Is Nothing And loginObj.Exist(3) Then
+ElseIf loginObj.Exist(3) Then
     loginObj.Click
 Else
-    ShowErrorOnPage "No login button found using identifiers: '" & Parameter("signInButton") & "' or '" & Parameter("loginButton") & "'"
-    Reporter.ReportEvent micFail, "Login Button", "No login button found"
+    errorMsg = "No login button found using identifiers: '" & Parameter("signInButton") & "' or '" & Parameter("loginButton") & "'"
+    ShowErrorOnPage oPage, errorMsg ' <-- העברת אובייקט הדף
+    Reporter.ReportEvent micFail, "Login Button", errorMsg
     ExitTest
 End If
 
 Wait(3)
 
-Set dashObj = GetObjectByName(Parameter("dashboardButton"))
-If Not dashObj Is Nothing And dashObj.Exist(20) Then
+' ייתכן שלאחר לוגין, כותרת הדף משתנה - נצטרך אובייקט דף חדש
+Dim oPageDashboard
+Set oPageDashboard = Browser("title:=.*Advantage.*").Page("title:=.*Advantage.*")
+
+Set dashObj = oPageDashboard.WebElement("innertext:=Bank Accounts")
+If dashObj.Exist(20) Then
     Reporter.ReportEvent micPass, "Login Test", "Login successful"
     dashObj.Click
 Else
-    ShowErrorOnPage "Login failed. Dashboard button not found using identifier: '" & Parameter("dashboardButton") & "'"
-    Reporter.ReportEvent micFail, "Login Test", "Login failed"
+    errorMsg = "Login failed. Dashboard button not found."
+    ShowErrorOnPage oPageDashboard, errorMsg ' <-- העברת אובייקט הדף החדש
+    Reporter.ReportEvent micFail, "Login Test", errorMsg
     ExitTest
 End If
 

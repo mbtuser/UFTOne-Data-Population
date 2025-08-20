@@ -1,7 +1,12 @@
 ﻿' =============================================================================
-' ✅ פונקציה להצגת שכבת שגיאה ויזואלית על גבי דף האינטרנט.
+' ✅ פונקציה להצגת שכבת שגיאה - מקבלת את אובייקט הדף
 ' =============================================================================
-Sub ShowErrorOnPage(errorMessage)
+Sub ShowErrorOnPage(oPage, errorMessage)
+    If oPage Is Nothing Then
+        Reporter.ReportEvent micWarning, "ShowErrorOnPage", "Page object was not provided. Cannot display visual error."
+        Exit Sub
+    End If
+
     On Error Resume Next
     Dim jsErrorMessage
     jsErrorMessage = Replace(errorMessage, "'", "\'")
@@ -13,13 +18,21 @@ Sub ShowErrorOnPage(errorMessage)
              "overlayDiv.style.cssText = 'position:fixed; top:30px; left:50%; transform:translateX(-50%); padding:25px; background-color:rgba(220, 53, 69, 0.9); color:white; font-size:22px; font-weight:bold; border:4px solid black; border-radius:12px; z-index:999999; box-shadow: 0 0 20px rgba(0,0,0,0.7); font-family:Arial,sans-serif; text-align:center;';" & _
              "overlayDiv.innerHTML = '❌ UFT One Test Failure ❌<hr style=""border-color:white; margin:10px 0;""><p style=""font-size:18px; font-weight:normal;"">" & jsErrorMessage & "</p>';" & _
              "if (document.body) { document.body.appendChild(overlayDiv); } else { console.error('UFT Error: " & jsErrorMessage & "'); }"
-    Browser("micclass:=Browser").Page("micclass:=Page").RunScript(jsCode)
+    
+    oPage.RunScript(jsCode)
+    
+    If Err.Number <> 0 Then
+        Reporter.ReportEvent micWarning, "ShowErrorOnPage", "Failed to inject visual error. Error: " & Err.Description
+    End If
+    
     Wait(5) ' המתנה כדי שההודעה תוקלט בוידאו
     On Error GoTo 0
 End Sub
 
-' --- START OF ORIGINAL ACTION LOGIC ---
 
+' =============================================================================
+' 								 START OF ACTION LOGIC
+' =============================================================================
 Dim iURL, fileSystemObj, browserPath, browserName
 iURL = "https://advantageonlinebanking.com/dashboard"
 Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
@@ -38,37 +51,47 @@ End If
 SystemUtil.Run browserPath, iURL
 Wait(5)
 
+' --- הגדרת אובייקטים מרכזיים פעם אחת ---
+Dim oBrowser, oPageDashboard, oPageAccounts, errorMsg
+Set oBrowser = Browser("title:=Dashboard - Advantage")
+Set oPageDashboard = oBrowser.Page("title:=Dashboard - Advantage")
+' נגדיר את עמוד החשבונות כאן, נשתמש בו מאוחר יותר
+Set oPageAccounts = oBrowser.Page("title:=Accounts - Advantage Bank")
+
 Dim accountsLinkText
 accountsLinkText = Parameter("ElementName")
 If Trim(accountsLinkText) = "" Then
     accountsLinkText = "Accounts"
 End If
 
-If Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link(accountsLinkText).Exist(5) Then
-    Wait(3)
-    Browser("Dashboard - Advantage").Page("Dashboard - Advantage").Link(accountsLinkText).Click
+If oPageDashboard.Link(accountsLinkText).Exist(5) Then
+    Wait(1)
+    oPageDashboard.Link(accountsLinkText).Click
     Wait(3)
 
-    If Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Open new account").Exist(3) Then
-        Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Open new account").Click
+    If oPageAccounts.WebButton("Open new account").Exist(3) Then
+        oPageAccounts.WebButton("Open new account").Click
 
-        If Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebEdit("name").Exist(3) Then
-            Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebEdit("name").Set Parameter("accountName")
-            Browser("Dashboard - Advantage").Page("Accounts - Advantage Bank").WebButton("Create").Click
+        If oPageAccounts.WebEdit("name").Exist(3) Then
+            oPageAccounts.WebEdit("name").Set Parameter("accountName")
+            oPageAccounts.WebButton("Create").Click
             Reporter.ReportEvent micPass, "Account Creation", "New account created successfully"
         Else
-            ShowErrorOnPage "Name input field not found on 'New Account' page."
-            Reporter.ReportEvent micFail, "Account Creation", "Name input field not found"
+            errorMsg = "Name input field not found on 'New Account' page."
+            ShowErrorOnPage oPageAccounts, errorMsg
+            Reporter.ReportEvent micFail, "Account Creation", errorMsg
             ExitTest
         End If
     Else
-        ShowErrorOnPage "'Open new account' button not found on 'Accounts' page."
-        Reporter.ReportEvent micFail, "Account Creation", "'Open new account' button not found"
+        errorMsg = "'Open new account' button not found on 'Accounts' page."
+        ShowErrorOnPage oPageAccounts, errorMsg
+        Reporter.ReportEvent micFail, "Account Creation", errorMsg
         ExitTest
     End If
 Else
-    ShowErrorOnPage "'Accounts' link not found on dashboard using text: '" & accountsLinkText & "'"
-    Reporter.ReportEvent micFail, "Navigation", "'Accounts' link not found on dashboard"
+    errorMsg = "'Accounts' link not found on dashboard using text: '" & accountsLinkText & "'"
+    ShowErrorOnPage oPageDashboard, errorMsg
+    Reporter.ReportEvent micFail, "Navigation", errorMsg
     ExitTest
 End If
 
