@@ -1,133 +1,84 @@
-﻿Dim iURL, objShell, fileSystemObj, browserPath, browserName
+﻿' =============================================================================
+' ✅ פונקציה להצגת שכבת שגיאה ויזואלית על גבי דף האינטרנט.
+' =============================================================================
+Sub ShowErrorOnPage(errorMessage)
+    Dim jsErrorMessage
+    jsErrorMessage = Replace(errorMessage, "'", "\'")
+    jsErrorMessage = Replace(jsErrorMessage, """", "\""")
+    jsErrorMessage = Replace(jsErrorMessage, vbCrLf, "<br>")
+    Dim jsCode
+    jsCode = "var overlayDiv = document.createElement('div');" & _
+             "overlayDiv.id = 'uft-error-overlay';" & _
+             "overlayDiv.style.cssText = 'position:fixed; top:30px; left:50%; transform:translateX(-50%); padding:25px; background-color:rgba(220, 53, 69, 0.9); color:white; font-size:22px; font-weight:bold; border:4px solid black; border-radius:12px; z-index:999999; box-shadow: 0 0 20px rgba(0,0,0,0.7); font-family:Arial,sans-serif; text-align:center;';" & _
+             "overlayDiv.innerHTML = '❌ UFT One Test Failure ❌<hr style=""border-color:white; margin:10px 0;""><p style=""font-size:18px; font-weight:normal;"">" & jsErrorMessage & "</p>';" & _
+             "if (document.body) { document.body.appendChild(overlayDiv); } else { console.error('UFT Error: " & jsErrorMessage & "'); }"
+    On Error Resume Next
+    Browser("micclass:=Browser").Page("micclass:=Page").RunScript(jsCode)
+    On Error GoTo 0
+    Wait(5) ' המתנה כדי שההודעה תוקלט בוידאו
+End Sub
 
+' --- START OF ORIGINAL ACTION LOGIC ---
 
-iURL = "https://advantageonlinebanking.com/dashboard"
-Set objShell = CreateObject("Shell.Application")
-Set fileSystemObj = CreateObject("Scripting.FileSystemObject")
-
-If fileSystemObj.FileExists("C:\Program Files\Google\Chrome\Application\chrome.exe") Then
-
-    browserPath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
-
-    browserName = "chrome.exe"
-ElseIf fileSystemObj.FileExists("C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe") Then
-
-    browserPath = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
-
-    browserName = "msedge.exe"
-ElseIf fileSystemObj.FileExists("C:\Program Files\Mozilla Firefox\firefox.exe") Then
-
-    browserPath = "C:\Program Files\Mozilla Firefox\firefox.exe"
-
-    browserName = "firefox.exe"
-ElseIf fileSystemObj.FileExists("C:\Program Files (x86)\Mozilla Firefox\firefox.exe") Then
-
-    browserPath = "C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
-
-    browserName = "firefox.exe"
-Else
-
-    Reporter.ReportEvent micFail, "Browser Launch", "No supported browser found"
-
-    ExitTest
-End If
-
-
-objShell.ShellExecute browserPath, iURL, "", "", 1
-Wait(5)
-
-' Function to take an area screenshot and add it to the report
-' x, y: top-left coordinates of the area
-' width, height: dimensions of the area
-' msg: description for the report
-Function TakeAreaScreenshot(x, y, width, height, msg)
-    On Error Resume Next ' Handle cases where screenshot might fail in headless mode
-    DeviceReplay.Screen.CaptureBitmap "", True, x, y, width, height
-    If Err.Number = 0 Then
-        Reporter.ReportEvent micWarning, "Area Screenshot", msg & " (Screenshot attached)"
-    Else
-        Reporter.ReportEvent micWarning, "Area Screenshot", msg & " (Failed to capture specific area: " & Err.Description & ")"
-    End If
+Function GetObjectByNameSafe(logicalName)
+    On Error Resume Next
+    Set GetObjectByNameSafe = Nothing
+    Select Case logicalName
+        Case "username"
+            Set GetObjectByNameSafe = Browser("CreationTime:=0").Page("title:=.*").WebEdit("name:=username")
+        Case "password"
+            Set GetObjectByNameSafe = Browser("CreationTime:=0").Page("title:=.*").WebEdit("name:=password")
+        Case "signIn"
+            Set GetObjectByNameSafe = Browser("CreationTime:=0").Page("title:=.*").WebButton("name:=Sign-In")
+        Case "login"
+            Set GetObjectByNameSafe = Browser("CreationTime:=0").Page("title:=.*").WebButton("name:=Login")
+        Case "dashboardBtn"
+            Set GetObjectByNameSafe = Browser("CreationTime:=0").Page("title:=.*").WebElement("innertext:=Bank Accounts")
+    End Select
     On Error GoTo 0
 End Function
 
+Dim usernameObj, passwordObj, signInObj, loginObj, dashObj
 
-Function GetObjectByName(elementName)
-
-    Select Case elementName
-
-        Case "username"
-
-            Set GetObjectByName = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("username")
-
-        Case "password"
-
-            Set GetObjectByName = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebEdit("password")
-
-        Case "signIn"
-
-            Set GetObjectByName = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebButton("Sign-In")
-
-        Case "login"
-
-            Set GetObjectByName = Browser("Home - Advantage Bank").Page("Home - Advantage Bank").WebButton("Login")
-
-        Case "dashboardBtn"
-
-            Set GetObjectByName = Browser("Dashboard - Advantage_2").Page("Dashboard - Advantage").WebElement("Bank Accounts")
-
-        Case Else
-
-            Set GetObjectByName = Nothing
-
-    End Select
-End Function
-
-Set usernameObj = GetObjectByName(Parameter("usernameField"))
+Set usernameObj = GetObjectByNameSafe("username")
 If Not usernameObj Is Nothing And usernameObj.Exist(3) Then
-    usernameObj.Set Parameter("username")
-    Reporter.ReportEvent micPass, "Username Set", "Username set successfully"
+    usernameObj.Set "samples_demo_tests1"
 Else
-    Reporter.ReportEvent micFail, "Username Not Found", "ERROR: Username field '" & Parameter("usernameField") & "' not found on page."
-    TakeAreaScreenshot 50, 50, 400, 100, "Expected Username field location" ' Adjust coordinates as needed
-    Wait(5) ' Keep the wait for effect in recording
+    ShowErrorOnPage "Username field not found"
+    Reporter.ReportEvent micFail, "Element Validation", "Username field not found"
+    ExitTest
 End If
 
-Set passwordObj = GetObjectByName(Parameter("passwordField"))
+Set passwordObj = GetObjectByNameSafe("password")
 If Not passwordObj Is Nothing And passwordObj.Exist(3) Then
-    passwordObj.SetSecure Parameter("password")
-    Reporter.ReportEvent micPass, "Password Set", "Password set successfully"
+    passwordObj.SetSecure "Aa1234567890"
 Else
-    Reporter.ReportEvent micFail, "Password Not Found", "ERROR: Password field '" & Parameter("passwordField") & "' not found on page."
-    TakeAreaScreenshot 50, 150, 400, 100, "Expected Password field location" ' Adjust coordinates as needed
-    Wait(5) ' Keep the wait for effect in recording
+    ShowErrorOnPage "Password field not found"
+    Reporter.ReportEvent micFail, "Element Validation", "Password field not found"
+    ExitTest
 End If
 
-Set signInObj = GetObjectByName(Parameter("signInButton"))
-Set loginObj  = GetObjectByName(Parameter("loginButton"))
-
-If Not signInObj Is Nothing And signInObj.Exist(3) Then
-    signInObj.Click
-ElseIf Not loginObj Is Nothing And loginObj.Exist(3) Then
-    loginObj.Click
+Set signInObj = GetObjectByNameSafe("signIn")
+If signInObj Is Nothing Or Not signInObj.Exist(3) Then
+    Set loginObj = GetObjectByNameSafe("login")
+    If loginObj Is Nothing Or Not loginObj.Exist(3) Then
+        ShowErrorOnPage "No login buttons (Sign-In or Login) were found"
+        Reporter.ReportEvent micFail, "Element Validation", "No login buttons were found"
+        ExitTest
+    Else
+        loginObj.Click
+    End If
 Else
-    Reporter.ReportEvent micFail, "Login Button", "ERROR: Login button ('" & Parameter("signInButton") & "' or '" & Parameter("loginButton") & "') not found on page."
-    TakeAreaScreenshot 50, 250, 400, 100, "Expected Login button location" ' Adjust coordinates as needed
-    Wait(5) ' Keep the wait for effect in recording
+    signInObj.Click
 End If
 
 Wait(3)
 
-Set dashObj = GetObjectByName(Parameter("dashboardButton"))
-If Not dashObj Is Nothing And dashObj.Exist(20) Then
-    Reporter.ReportEvent micPass, "Login Test", "Login successful"
+Set dashObj = GetObjectByNameSafe("dashboardBtn")
+If Not dashObj Is Nothing And dashObj.Exist(10) Then
     dashObj.Click
 Else
-    Reporter.ReportEvent micFail, "Login Test", "ERROR: Dashboard button ('" & Parameter("dashboardButton") & "') not found. Login failed or element missing from page."
-    TakeAreaScreenshot 50, 350, 400, 100, "Expected Dashboard button location" ' Adjust coordinates as needed
-    Wait(5) ' Keep the wait for effect in recording
+    ShowErrorOnPage "Dashboard button not found after login"
+    Reporter.ReportEvent micFail, "Post-Login Validation", "Dashboard button not found"
+    ExitTest
 End If
-
-
-SystemUtil.CloseProcessByName browserName
-
